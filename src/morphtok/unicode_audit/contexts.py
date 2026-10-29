@@ -116,11 +116,12 @@ def load_annotations(path: Path) -> dict[str, list[tuple[str, str]]]:
     for line in lines[1:]:
         cols = line.split("\t")
         cols += [""] * (len(header) - len(cols))  # spreadsheet apps drop empty trailing cells
-        label = cols[idx["label"]].strip()
+        label = cols[idx["label"]].strip().upper()
         if label:
             if label not in LABELS:
                 raise ValueError(f"unknown label {label!r} in {path}")
-            out.setdefault(cols[idx["occ_id"]], []).append((cols[idx["annotator"]], label))
+            annotator = cols[idx["annotator"]].strip() or "A1"
+            out.setdefault(cols[idx["occ_id"]], []).append((annotator, label))
     return out
 
 
