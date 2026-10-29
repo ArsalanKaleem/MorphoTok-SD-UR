@@ -1,0 +1,14 @@
+# Intrinsic evaluation against LEMMA-DERIVED SILVER boundaries (not gold).
+# Held-out = dev/test lemmas never seen by the supervision analyzer (split by lemma).
+primary_metric: boundary_f1
+secondary_metrics: [boundary_precision, boundary_recall, exact_match, fertility, tokens_per_char,
+                    mean_token_len, paradigm_coherence]
+eval_split: dev
+gold_scope: all            # score every held-out silver type (silver comes from a word list)
+reference_system: unigram
+frequency_bins: [0, 1, 5, 20]
+bootstrap: {n_boot: 1000, level: 0.95}
+randomization: {n_perm: 1000}
+thresholds:
+  min_f1_gain: null
+  max_fertility_increase: null

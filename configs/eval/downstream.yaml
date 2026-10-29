@@ -1,0 +1,16 @@
+# Downstream evaluation (Gate 5). Nothing here is configured; Gate 5 has not been reached.
+enabled: false
+tasks:
+  sentiment: {dataset: null, licence: null}                              # TODO(resource)
+  ner: {dataset: null, licence: null, label_alignment: first_subword}     # TODO(resource)
+  lm_small:
+    proxy: bigram_bits_per_char   # CPU sanity proxy implemented in downstream/lm_small.py
+    neural: null                  # TODO(engineering): small Transformer within one T4
+controls:
+  training_data_id: null
+  train_steps: null
+  sequence_policy: truncate_chars # character budget, so every tokenizer sees equal text
+  max_seq_len: null
+  architecture: null
+  seeds: [0, 1, 2]
+compute_budget: {gpu: "1x NVIDIA T4 (~16 GB)", max_hours: null}
