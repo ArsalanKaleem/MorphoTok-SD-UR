@@ -37,7 +37,7 @@ def main() -> int:
     """Dispatch one target."""
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("target", choices=[*SCRIPTS, "setup", "lint", "test", "fixture", "clean", "real-data",
-                                       "prereg-status", "prereg-freeze"])  # fmt: skip
+                                       "review-sheets", "review-ingest", "prereg-status", "prereg-freeze"])  # fmt: skip
     ap.add_argument("--data", default="synthetic")
     ap.add_argument("--config", default="configs/run/default.yaml")
     a = ap.parse_args()
@@ -65,6 +65,10 @@ def main() -> int:
             if run(py, "-X", "utf8", "scripts/build_silver.py", lang):
                 return 1
         return run(py, "-X", "utf8", "scripts/build_zia_gold.py")
+    if a.target == "review-sheets":
+        return run(py, "-X", "utf8", "scripts/make_review_sheets.py")
+    if a.target == "review-ingest":
+        return run(py, "-X", "utf8", "scripts/ingest_review.py")
     if a.target == "fixture":
         return run(py, "-X", "utf8", "-m", "morphtok.data.synthetic")
     if a.target == "prereg-status":
