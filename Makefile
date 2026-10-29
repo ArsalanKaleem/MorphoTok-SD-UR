@@ -15,8 +15,8 @@ endif
 RUN := $(PY) -X utf8
 ARGS := --config $(CONFIG) --data $(DATA)
 
-.PHONY: setup lint format test gate0 gate1 gate2 tokenizer intrinsic ablations \
-        fixture prereg-status prereg-freeze clean
+.PHONY: setup lint format test gate0 gate1 gate2 tokenizer intrinsic ablations lmproxy \
+        real-data review-sheets review-ingest fixture prereg-status prereg-freeze clean
 
 setup:
 	$(PYBASE) -m venv .venv
@@ -66,6 +66,13 @@ lmproxy:
 real-data:
 	for l in sd ur; do $(RUN) scripts/prepare_wikipedia.py $$l --n-lines 5000; $(RUN) scripts/build_silver.py $$l; done
 	$(RUN) scripts/build_zia_gold.py
+
+# Native-speaker review (audit/REVIEWING.md): create sheets once, then check/import answers
+review-sheets:
+	$(RUN) scripts/make_review_sheets.py
+
+review-ingest:
+	$(RUN) scripts/ingest_review.py
 
 fixture:
 	$(RUN) -m morphtok.data.synthetic
