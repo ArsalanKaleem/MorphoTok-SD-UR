@@ -1,0 +1,19 @@
+# Sindhi WEB-domain config (5,000-line web pilot): FineWeb-2 test split, prepared by
+# scripts/prepare_wikipedia.py --input (see data/raw/SOURCE.md and the manifest).
+name: sindhi_web
+language: sd
+synthetic: false
+corpus:
+  path: data/processed/sd_fineweb2test_pilot5000.txt   # 5,000-line web pilot
+  licence: "ODC-By 1.0 (FineWeb-2 dataset card); Common Crawl terms of use apply"
+  domain: web
+gold:
+  path: null          # TODO(annotation): data/gold/sindhi_gold.tsv after the audit protocol
+zwnj_annotations:
+  path: null          # TODO(annotation): data/audit/sindhi_zwnj_annotations.tsv
+analyzer:
+  type: sindhi_rules
+  rules_path: null    # TODO(resource): provenance-bearing affix rule file; none ships with the repo
+split:
+  salt: morphtok-sindhi
+  unit: line          # TODO(data): switch to document-level splits if document IDs exist

@@ -1,0 +1,21 @@
+# Urdu dataset configuration.
+# AUDIT config (Gate 1): ALL eligible lines of Urdu Wikipedia (dump 2023-11-01), prepared by
+# scripts/prepare_wikipedia.py (see data/raw/SOURCE.md and the manifest next to the file).
+name: urdu_audit
+language: ur
+synthetic: false
+corpus:
+  path: data/processed/ur_wiki20231101_pilot853889.txt   # ALL eligible lines (for the Gate 1 audit only); manifest: *.manifest.json
+  licence: "CC BY-SA 3.0 / GFDL (Wikipedia; per huggingface.co/datasets/wikimedia/wikipedia)"
+  domain: encyclopedia
+gold:
+  path: null          # TODO(annotation): data/gold/urdu_gold.tsv
+zwnj_annotations:
+  path: null          # TODO(annotation): data/audit/urdu_zwnj_annotations.tsv
+analyzer:
+  type: urdu_fst
+  command: null       # TODO(resource): verified FST lookup command, e.g. [<binary>, <model>]
+  version: unverified
+split:
+  salt: morphtok-urdu
+  unit: line

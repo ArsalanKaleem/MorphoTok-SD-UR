@@ -1,0 +1,23 @@
+# Urdu, Wikipedia pilot corpus, evaluated against HUMAN ZWNJ sub-word annotations
+# (Zia et al. 2018; data/gold/ur_zia_zwnj.tsv, held-out word types).
+# Supervision: Zia ZWNJ annotations + lemma-derived silver (UD + UniMorph), train splits only.
+# Only ZWNJ-marked boundaries are annotated: report RECALL; precision/F1 are not meaningful.
+name: urdu_zia_combined
+language: ur
+synthetic: false
+corpus:
+  path: data/processed/ur_wiki20231101_pilot5000.txt
+  licence: "CC BY-SA 3.0 / GFDL (Wikipedia; per huggingface.co/datasets/wikimedia/wikipedia)"
+  domain: encyclopedia
+gold:
+  path: data/gold/ur_zia_zwnj.tsv
+zwnj_annotations:
+  path: null
+analyzer:
+  type: lemma_derived
+  silver_path: [data/gold/ur_zia_zwnj.tsv, data/gold/ur_silver.tsv]
+  use_splits: [train]
+  base_confidence: 0.8
+split:
+  salt: morphtok-urdu
+  unit: line

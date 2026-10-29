@@ -1,0 +1,20 @@
+# Urdu WEB-domain config (ALL eligible lines (Gate 1 audit, web domain)): FineWeb-2 test split, prepared by
+# scripts/prepare_wikipedia.py --input (see data/raw/SOURCE.md and the manifest).
+name: urdu_web_audit
+language: ur
+synthetic: false
+corpus:
+  path: data/processed/ur_fineweb2test_pilot452557.txt   # ALL eligible lines (Gate 1 audit, web domain)
+  licence: "ODC-By 1.0 (FineWeb-2 dataset card); Common Crawl terms of use apply"
+  domain: web
+gold:
+  path: null          # TODO(annotation): data/gold/urdu_gold.tsv
+zwnj_annotations:
+  path: null          # TODO(annotation): data/audit/urdu_zwnj_annotations.tsv
+analyzer:
+  type: urdu_fst
+  command: null       # TODO(resource): verified FST lookup command, e.g. [<binary>, <model>]
+  version: unverified
+split:
+  salt: morphtok-urdu
+  unit: line
