@@ -6,7 +6,8 @@ deterministic given the seed.
 
 Annotation labels (``audit/annotation_guidelines.md``):
 ``MORPH`` (ZWNJ coincides with a morphological boundary), ``ORTHO`` (orthographic
-only), ``AMBIG`` (annotator cannot decide), ``ERROR`` (encoding/typing error).
+only), ``AMBIG`` (annotator cannot decide), ``ERROR`` (encoding/typing error),
+``FOREIGN`` (the text is not in the target language, e.g. Persian quoted in Urdu).
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from morphtok.data.normalize import ZWNJ, strip_format, unicode_normalize
 from morphtok.eval.stats import wilson_interval
 from morphtok.unicode_audit.zwnj_stats import char_class, position_in_word
 
-LABELS: tuple[str, ...] = ("MORPH", "ORTHO", "AMBIG", "ERROR")
+LABELS: tuple[str, ...] = ("MORPH", "ORTHO", "AMBIG", "ERROR", "FOREIGN")
 
 
 @dataclass(frozen=True)
@@ -125,8 +126,8 @@ def load_annotations(path: Path) -> dict[str, list[tuple[str, str]]]:
 def morph_rate(labels: Mapping[str, str]) -> dict[str, object]:
     """Proportion of adjudicated occurrences labelled MORPH, with a Wilson 95% CI.
 
-    The denominator excludes ``ERROR``; ``AMBIG`` is reported and *included* in the
-    denominator (conservative for the claim that ZWNJ marks morphology).
+    The denominator excludes ``ERROR`` and ``FOREIGN``; ``AMBIG`` is reported and
+    *included* in the denominator (conservative for the claim that ZWNJ marks morphology).
     """
     c = Counter(labels.values())
     denom = c["MORPH"] + c["ORTHO"] + c["AMBIG"]
