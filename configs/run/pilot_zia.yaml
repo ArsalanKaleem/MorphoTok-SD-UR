@@ -1,0 +1,38 @@
+# PILOT: Urdu compound-boundary recovery against Zia et al. ZWNJ gold (exploratory).
+# --data sindhi | urdu: 5,000-line Wikipedia pilots with lemma-derived SILVER supervision.
+# --data sindhi_web | urdu_web: web-domain pilots (Gate 0 only; no silver for the web).
+# --data *_audit / *_web_audit: full text for the Gate 1 audit.
+# Vocabulary sizes must exceed the character inventory (~400 in the pilots).
+data: urdu_zia
+output_dir: runs
+tokenizers: [bpe, unigram, unigram_hard, unigram_soft, unigram_hard_trainonly, unigram_soft_trainonly]
+eval: configs/eval/intrinsic_silver.yaml
+splits: {train: 0.8, dev: 0.1, test: 0.1}
+vocab_sizes: [2000, 4000]      # PILOT choice; TODO(pilot): justify from fertility curves
+seeds: [0, 1, 2]
+train_fraction: 0.9
+
+gate0:
+  tokenizers: [bpe, unigram, char]
+  policies: [preserve, remove, boundary_marker]
+
+gate1:
+  sample_size: 200
+  sample_seed: 13
+  context_window: 30
+
+gate2:
+  calibration_bins: 10
+
+ablations:
+  max_conditions: 40
+  vocab_size: 4000
+  seeds: [0, 1, 2]
+  base: unigram_soft_trainonly
+  lambda_sweep: [0.0, 0.5, 2.0, 8.0, 64.0]
+  penalty_mappings: [linear, uniform]
+  analyzer_perturbations:
+    - {coverage: 1.0, p_delete: 0.0, p_insert: 0.0}
+    - {coverage: 0.5, p_delete: 0.0, p_insert: 0.0}
+    - {coverage: 0.25, p_delete: 0.0, p_insert: 0.0}
+  sampling: {n_words: 50, n_samples: 50, alphas: [0.1, 0.5, 1.0]}
