@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "morphtok/result.schema.json",
+  "title": "MorphoTok experiment result record",
+  "description": "Written by morphtok.experiments.results.finalise; required keys are also checked in code (validate_record).",
+  "type": "object",
+  "required": ["schema_version", "run_id", "experiment_id", "status", "timestamp", "seed", "git", "prereg",
+               "config_hash", "data", "vocab_size", "normalization", "tokenizer", "environment", "metrics",
+               "uncertainty", "warnings", "skipped_steps", "synthetic"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string"},
+    "experiment_id": {"type": "string", "description": "Must start with SYN- when synthetic is true"},
+    "status": {"enum": ["ok", "failed", "skipped", "running"]},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "seed": {"type": ["integer", "null"]},
+    "git": {
+      "type": "object",
+      "required": ["commit", "dirty", "branch"],
+      "properties": {
+        "commit": {"type": ["string", "null"]},
+        "dirty": {"type": ["boolean", "null"]},
+        "branch": {"type": ["string", "null"]},
+        "warning": {"type": ["string", "null"]}
+      }
+    },
+    "prereg": {
+      "type": "object",
+      "required": ["frozen", "tag"],
+      "properties": {"frozen": {"type": "boolean"}, "tag": {"type": ["string", "null"]}, "reason": {"type": ["string", "null"]}}
+    },
+    "config_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "data": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "language": {"type": "string"},
+        "synthetic": {"type": "boolean"},
+        "sha256": {"type": "string"},
+        "split_sizes": {"type": "object"},
+        "licence": {"type": ["string", "null"]}
+      }
+    },
+    "vocab_size": {"type": ["integer", "null"]},
+    "normalization": {"type": "object"},
+    "tokenizer": {"type": "object"},
+    "environment": {"type": "object"},
+    "metrics": {"type": "object"},
+    "uncertainty": {"type": "object"},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "skipped_steps": {"type": "array", "items": {"type": "string"}},
+    "synthetic": {"type": "boolean"},
+    "nondeterminism": {"type": "array", "items": {"type": "string"}},
+    "error": {"type": "string"}
+  }
+}

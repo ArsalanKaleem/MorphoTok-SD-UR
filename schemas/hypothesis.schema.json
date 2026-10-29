@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "morphtok/hypothesis.schema.json",
+  "title": "Follow-up hypothesis record",
+  "description": "One line of runs/followups.jsonl, written by morphtok.experiments.followups. Never promoted to a claim automatically.",
+  "type": "object",
+  "required": ["hypothesis_id", "parent_experiment_id", "observed_evidence", "alternative_explanations",
+               "proposed_intervention", "expected_outcomes", "minimum_discriminating_experiment", "confounds",
+               "computational_cost", "literature_verification_status", "decision_criteria", "result",
+               "followup_decision", "status", "synthetic", "created"],
+  "properties": {
+    "hypothesis_id": {"type": "string"},
+    "parent_experiment_id": {"type": "string"},
+    "observed_evidence": {"type": "string"},
+    "alternative_explanations": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+    "proposed_intervention": {"type": "string"},
+    "expected_outcomes": {"type": "object", "additionalProperties": {"type": "string"}},
+    "minimum_discriminating_experiment": {"type": "string"},
+    "confounds": {"type": "array", "items": {"type": "string"}},
+    "computational_cost": {"type": "string"},
+    "literature_verification_status": {"enum": ["unverified", "searched-none-found", "prior-work-found"]},
+    "decision_criteria": {"type": "string"},
+    "result": {"type": ["string", "null"]},
+    "followup_decision": {"type": ["string", "null"]},
+    "status": {"enum": ["proposed", "running", "resolved", "rejected"]},
+    "synthetic": {"type": "boolean"},
+    "created": {"type": "string"}
+  }
+}
