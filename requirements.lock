@@ -1,0 +1,3 @@
+# Runtime lock (pip-tools format). Resolved with pip on CPython 3.14.7 / Windows 11;
+# Python 3.11 resolution NOT verified (no 3.11 interpreter was available).
+pyyaml==6.0.3
