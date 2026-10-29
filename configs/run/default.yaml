@@ -1,0 +1,39 @@
+# Default run: SYNTHETIC data so every target runs without external resources.
+# Pass `--data sindhi` or `--data urdu` once real resources are configured.
+data: synthetic
+output_dir: runs
+tokenizers: [bpe, char, unigram, unigram_zwnj_norm, unigram_hard, unigram_soft]
+eval: configs/eval/intrinsic.yaml
+splits: {train: 0.8, dev: 0.1, test: 0.1}
+vocab_sizes: [150, 300]        # PILOT range for the synthetic corpus; TODO(pilot) for real data
+seeds: [0, 1, 2]               # >= 3 seeds required by Gate 3
+train_fraction: 0.9            # seeded subsample of the train split = between-seed variation
+
+gate0:
+  tokenizers: [bpe, unigram, char]
+  policies: [preserve, remove, boundary_marker]
+
+gate1:
+  sample_size: 200
+  sample_seed: 13
+  context_window: 20
+
+gate2:
+  calibration_bins: 10
+
+ablations:
+  max_conditions: 40           # hard cap: the script refuses larger grids
+  vocab_size: 300
+  seeds: [0, 1, 2]
+  base: unigram_soft
+  lambda_sweep: [0.0, 0.5, 2.0, 8.0, 64.0]
+  penalty_mappings: [linear, uniform]
+  analyzer_perturbations:
+    - {coverage: 1.0, p_delete: 0.0, p_insert: 0.0}
+    - {coverage: 0.5, p_delete: 0.0, p_insert: 0.0}
+    - {coverage: 1.0, p_delete: 0.3, p_insert: 0.0}
+    - {coverage: 1.0, p_delete: 0.0, p_insert: 0.05}
+  sampling:
+    n_words: 50
+    n_samples: 50
+    alphas: [0.1, 0.5, 1.0]
