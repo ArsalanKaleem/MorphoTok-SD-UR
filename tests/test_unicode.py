@@ -120,3 +120,13 @@ def test_foreign_and_error_excluded_from_morph_rate() -> None:
     r = morph_rate({"a": "MORPH", "b": "ORTHO", "c": "FOREIGN", "d": "ERROR", "e": "AMBIG"})
     assert r["denominator"] == 3
     assert r["morph_rate"] == pytest.approx(1 / 3)
+
+
+def test_annotation_sheet_with_bom_and_dropped_trailing_cells(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    from morphtok.unicode_audit.contexts import load_annotations
+
+    p = tmp_path / "sheet.tsv"
+    p.write_text(
+        "occ_id\tstratum\tword\tlabel\tannotator\tnote\nL1\ts\tw\tforeign\nL2\ts\tw\n", encoding="utf-8-sig"
+    )
+    assert load_annotations(p) == {"L1": [("A1", "FOREIGN")]}
