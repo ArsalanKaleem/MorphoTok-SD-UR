@@ -15,10 +15,20 @@ supply. No annotation in this repository has been expert-validated.
 | `ORTHO` | The ZWNJ is orthographic only (e.g. controls joining/shaping) and is not at a morpheme boundary. |
 | `AMBIG` | The annotator cannot decide from the word and context. |
 | `ERROR` | The ZWNJ appears to be an encoding or typing error. |
+| `FOREIGN` | The surrounding text is not in the target language (e.g. Persian quoted in an Urdu article). Excluded from the MORPH-rate denominator, like `ERROR`. |
 
 **Task B (boundary gold, Gates 2–3).** For each sampled word type, mark every
 morphological boundary as a position in the word *with all ZWNJ/ZWJ removed*
-(stripped coordinates; `audit/sampling_protocol.md` gives the tool format).
+(stripped coordinates; `audit/sampling_protocol.md` gives the tool format). In the
+review sheets this is done by inserting `+` between morphemes in the pre-filled
+`segmentation` column, and setting `status` to `OK`, `?` (unsure) or `SKIP` (not a word
+of the language). Rows without a status count as not yet reviewed. Step-by-step
+instructions for reviewers are in `audit/REVIEWING.md`.
+
+**Task V (letter variants).** For each pair of spellings that differ only in yeh, kaf
+or heh code points, decide `SAME` (one word, encoding or keyboard variant), `DIFFERENT`
+(different words or distinct letters) or `UNSURE`. Only `SAME` pairs may ever become
+`selective` normalization rules.
 
 ## 2. Morphological vs orthographic boundaries
 
