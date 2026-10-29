@@ -1,0 +1,3 @@
+# Optional data-preparation lock (pip-tools format), from the verified environment
+# (CPython 3.14.7, Windows 11). Python 3.11 resolution NOT verified.
+pyarrow==26.0.0
