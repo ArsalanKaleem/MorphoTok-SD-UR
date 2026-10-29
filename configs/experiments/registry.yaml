@@ -1,0 +1,465 @@
+# Experiment registry (Part III). Loaded and validated by
+# src/morphtok/experiments/registry.py; every entry must answer the six questions.
+# Thresholds are deliberately absent: they are set only after the pilot
+# (prereg/decision_gates.md). Status values: registered | piloted | run | retired.
+
+experiments:
+
+  - exp_id: A1-zwnj-normalization-fertility
+    family: A
+    hypothesis: H1
+    gate: 0
+    design: paired
+    uncertainty: Does removing or marking ZWNJ by itself account for fertility differences between tokenizers?
+    competing_explanations:
+      - normalization explains the difference
+      - tokenizer algorithm explains the difference
+    distinguishing_observation: >-
+      Fertility delta (remove - preserve) within a tokenizer, compared with the delta between
+      tokenizers within one policy, at matched vocabulary sizes.
+    controlled: [training corpus, vocabulary size, unicode form, pre-tokenization, seeds]
+    nuisance: [corpus subsample, tie-breaking in BPE merges]
+    baselines: [bpe, unigram, char]
+    intervention: zwnj policy in {preserve, remove, boundary_marker}
+    primary_metric: fertility (tokens per raw orthographic word)
+    secondary_metrics: [tokens_per_char, boundary_f1, mean_token_len]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      normalization explains the difference: within-tokenizer policy delta >> between-tokenizer delta
+      tokenizer algorithm explains the difference: between-tokenizer delta persists within every policy
+    falsification: H1 is contradicted if within-policy between-tokenizer differences exceed policy effects.
+    abandon_if: Normalization share >= the (pilot-set) threshold -> drop any ZWNJ-specific loss claim.
+    followups:
+      normalization dominates: compare morphology-aware variants only within the remove policy (A1 -> B1 restricted)
+      algorithm dominates: proceed to B1 with policy fixed to preserve
+    resources: {cpu_minutes: 2, data: real corpus, analyzer: none}
+    artifacts: [runs/*G0-summary/table.txt]
+    config: configs/run/default.yaml
+
+  - exp_id: A2-zwnj-context-audit
+    family: A
+    hypothesis: H2
+    gate: 1
+    design: audit
+    uncertainty: How often does ZWNJ coincide with a morphological boundary?
+    competing_explanations:
+      - ZWNJ is mainly morphological
+      - ZWNJ is mainly orthographic
+    distinguishing_observation: MORPH proportion (Wilson CI) over a stratified, adjudicated sample.
+    controlled: [sampling frame, stratification, annotation guidelines, unicode form]
+    nuisance: [annotator, corpus domain]
+    baselines: [none (descriptive audit)]
+    intervention: none
+    primary_metric: morph_rate with Wilson 95% CI
+    secondary_metrics: [cohen_kappa, label distribution per stratum]
+    seeds: [13]
+    expected_outcomes:
+      ZWNJ is mainly morphological: morph_rate CI lies above 0.5
+      ZWNJ is mainly orthographic: morph_rate CI lies below 0.5
+    falsification: H2 is contradicted if the CI lies above 0.5.
+    abandon_if: morph_rate is low -> treat ZWNJ as an orthographic/robustness variable only (Objective D only).
+    followups:
+      mostly orthographic: keep ZWNJ policy as a nuisance variable; do not use it as morphological supervision
+      mostly morphological: test ZWNJ as a boundary class in Family B (alternative boundary classes)
+      ambiguous: expand sample in the ambiguous strata
+    resources: {annotator_hours: TODO, data: real corpus}
+    artifacts: [runs/*G1-zwnj-audit/zwnj_annotation_sheet.tsv]
+    config: configs/run/default.yaml
+
+  - exp_id: B1-plain-soft-hard
+    family: B
+    hypothesis: H4
+    gate: 3
+    design: paired
+    uncertainty: Does a soft boundary prior beat plain, hard-constrained and ZWNJ-normalized Unigram?
+    competing_explanations:
+      - soft prior helps beyond hard constraints
+      - hard constraints are sufficient
+      - neither beats normalization alone
+    distinguishing_observation: Paired boundary-F1 deltas (soft-hard, soft-plain, soft-norm) on dev, then test.
+    controlled: [vocabulary size, corpus, normalization, analyzer, supervision config, seeds]
+    nuisance: [corpus subsample]
+    baselines: [unigram, unigram_hard, unigram_zwnj_norm, bpe]
+    intervention: unigram_soft
+    primary_metric: boundary_f1 (gold types, stripped coordinates)
+    secondary_metrics: [exact_match, fertility, tokens_per_char, stratified F1]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      soft prior helps beyond hard constraints: soft - hard > 0 with CI excluding 0 over seeds
+      hard constraints are sufficient: soft - hard CI includes 0 or is negative
+      neither beats normalization alone: soft - norm CI includes 0
+    falsification: H4 is contradicted if soft does not beat hard and plain at matched vocabulary.
+    abandon_if: Hard >= soft -> adopt hard constraints and remove the soft prior (Gate 3).
+    followups:
+      soft wins: test robustness (C2) and frequency strata (D1) before claiming
+      hard wins: report hard constraints as the simpler method; retire Objective A
+      no difference: report negative result; pivot to analyzer-quality study
+    resources: {cpu_minutes: 5, analyzer: required}
+    artifacts: [runs/*EVAL-summary-dev/comparisons.json]
+    config: configs/run/default.yaml
+
+  - exp_id: B2-lambda-sensitivity
+    family: B
+    hypothesis: H8
+    gate: 3
+    design: sensitivity
+    uncertainty: Is the soft prior's effect a monotone interpolation toward the hard limit?
+    competing_explanations:
+      - interior optimum exists
+      - monotone approach to hard limit
+    distinguishing_observation: Dev F1 as a function of lambda, including lambda=0 and a large lambda vs hard.
+    controlled: [vocabulary size, analyzer, seeds, normalization]
+    nuisance: [corpus subsample]
+    baselines: [unigram (lambda=0), unigram_hard]
+    intervention: lambda sweep
+    primary_metric: boundary_f1 on dev
+    secondary_metrics: [fertility]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      interior optimum exists: some finite lambda exceeds both lambda=0 and hard
+      monotone approach to hard limit: F1 increases with lambda and plateaus at hard
+    falsification: The soft prior adds nothing over hard if the curve is monotone toward hard.
+    abandon_if: Monotone toward hard -> soft prior is unnecessary complexity.
+    followups:
+      interior optimum: choose lambda on dev, evaluate once on test
+      monotone: retire Objective A in favour of Objective B
+    resources: {cpu_minutes: 3}
+    artifacts: [runs/*ABL-summary/results.json]
+    config: configs/run/default.yaml
+
+  - exp_id: C1-analyzer-coverage-precision
+    family: C
+    hypothesis: H3
+    gate: 2
+    design: audit
+    uncertainty: Do available analyzers cover enough types with enough boundary precision?
+    competing_explanations:
+      - coverage and precision are sufficient
+      - coverage is too low
+      - precision is too low
+    distinguishing_observation: Type/token coverage and boundary P/R against manually reviewed dev gold.
+    controlled: [word list, normalization, gold set]
+    nuisance: [domain]
+    baselines: [null analyzer]
+    intervention: configured analyzer
+    primary_metric: boundary precision on covered dev gold types
+    secondary_metrics: [type_coverage, token_coverage, recall, ECE]
+    seeds: [0]
+    expected_outcomes:
+      coverage and precision are sufficient: both exceed pilot-set thresholds
+      coverage is too low: coverage below threshold
+      precision is too low: precision below threshold
+    falsification: H3 is contradicted if coverage or precision falls below the pilot thresholds.
+    abandon_if: Insufficient coverage/precision -> pivot to uncertainty-aware supervision or a resource study.
+    followups:
+      sufficient: proceed to B1
+      low coverage: run C2 coverage-reduction curve to estimate the coverage needed
+      low precision: test high-confidence-only supervision (min_confidence) and calibration
+    resources: {annotator_hours: TODO}
+    artifacts: [runs/*G2-coverage-*/]
+    config: configs/run/default.yaml
+
+  - exp_id: C2-analyzer-robustness
+    family: C
+    hypothesis: H5
+    gate: 3
+    design: sensitivity
+    uncertainty: How fast does the benefit of supervision degrade with analyzer errors and lower coverage?
+    competing_explanations:
+      - graceful degradation
+      - brittle dependence on analyzer quality
+    distinguishing_observation: Dev F1 under coverage reduction, boundary deletion and insertion.
+    controlled: [vocabulary size, lambda, seeds, normalization]
+    nuisance: [perturbation randomness]
+    baselines: [clean analyzer, no analyzer]
+    intervention: perturbed analyzer outputs; uniform vs confidence-weighted penalty
+    primary_metric: boundary_f1 on dev
+    secondary_metrics: [F1 slope per unit deletion rate]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      graceful degradation: F1 stays above the no-analyzer baseline at moderate noise
+      brittle dependence on analyzer quality: F1 falls to or below the no-analyzer baseline
+    falsification: Robustness claims fail if moderate noise erases the gain.
+    abandon_if: Brittle -> restrict claims to high-precision analyzers or pivot to calibration.
+    followups:
+      graceful: report robustness curve
+      brittle: test calibration / selective supervision (follow-up generator rule)
+    resources: {cpu_minutes: 3}
+    artifacts: [runs/*ABL-summary/results.json]
+    config: configs/run/default.yaml
+
+  - exp_id: C3-random-boundary-negative-control
+    family: C
+    hypothesis: H6
+    gate: 3
+    design: negative_control
+    uncertainty: Is the gain due to morphological information or to adding any boundaries?
+    competing_explanations:
+      - morphological information
+      - generic boundary-count effect
+    distinguishing_observation: F1 with random boundaries of the same count and coverage vs the real analyzer.
+    controlled: [coverage, boundary count per word, lambda, vocabulary size, seeds]
+    nuisance: [random positions]
+    baselines: [no analyzer, real analyzer]
+    intervention: RandomBoundaryAnalyzer
+    primary_metric: boundary_f1 on dev
+    secondary_metrics: [fertility]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      morphological information: random control near the no-analyzer baseline, well below the real analyzer
+      generic boundary-count effect: random control close to the real analyzer
+    falsification: H6 is contradicted if the random control recovers most of the gain.
+    abandon_if: Random control recovers most of the gain -> the claim is not morphological.
+    followups:
+      morphological: proceed
+      generic: investigate token-length and boundary-density confounds (D1)
+    resources: {cpu_minutes: 1}
+    artifacts: [runs/*ABL-summary/results.json]
+    config: configs/run/default.yaml
+
+  - exp_id: D1-vocab-frequency-strata
+    family: D
+    hypothesis: H6
+    gate: 3
+    design: factorial
+    uncertainty: Do gains depend on vocabulary size or concentrate in particular frequency strata?
+    competing_explanations:
+      - uniform gain
+      - gain only on frequent words (memorisation)
+      - gain only on rare/unseen words
+    distinguishing_observation: F1 deltas per training-frequency bin across vocabulary sizes.
+    controlled: [corpus, normalization, analyzer, seeds]
+    nuisance: [bin edges (fixed in configs/eval/intrinsic.yaml)]
+    baselines: [unigram, bpe]
+    intervention: vocabulary size x system
+    primary_metric: stratified boundary_f1
+    secondary_metrics: [mean_token_len, fertility]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      uniform gain: similar deltas in every bin
+      gain only on frequent words (memorisation): delta concentrated in high-frequency bins
+      gain only on rare/unseen words: delta concentrated in 0/1 bins
+    falsification: H6 is contradicted if gains coincide with longer tokens and frequent-word memorisation.
+    abandon_if: Gains appear only at one vocabulary size -> no general claim.
+    followups:
+      memorisation: control for token length; report efficiency and alignment separately
+      rare-word gain: emphasise generalisation in evaluation; collect more rare-word gold
+    resources: {cpu_minutes: 5}
+    artifacts: [runs/*EVAL-summary-dev/comparisons.json]
+    config: configs/run/default.yaml
+
+  - exp_id: E1-sampling-stability
+    family: E
+    hypothesis: H8
+    gate: 3
+    design: sensitivity
+    uncertainty: Does sampling change the value of constraints, and how peaked is the posterior?
+    competing_explanations:
+      - posterior is near-deterministic
+      - posterior is diverse enough for regularisation to matter
+    distinguishing_observation: Distinct segmentations, Viterbi agreement and exact entropy vs alpha.
+    controlled: [model, word sample, number of samples]
+    nuisance: [word sample]
+    baselines: [Viterbi decoding]
+    intervention: alpha in {0.1, 0.5, 1.0}
+    primary_metric: exact segmentation entropy (nats)
+    secondary_metrics: [distinct segmentations, Viterbi agreement]
+    seeds: [0]
+    expected_outcomes:
+      posterior is near-deterministic: entropy near 0 at alpha=1
+      posterior is diverse enough for regularisation to matter: substantial entropy at alpha=1
+    falsification: Sampling-based arguments are moot if the posterior is near-deterministic at the used alpha.
+    abandon_if: Near-deterministic -> drop sampling-specific claims.
+    followups:
+      deterministic: compare constraints under Viterbi only
+      diverse: test constrained sampling (Objective E)
+    resources: {cpu_minutes: 1}
+    artifacts: [runs/*ABL-summary/]
+    config: configs/run/default.yaml
+
+  - exp_id: F1-language-domain-generalisation
+    family: F
+    hypothesis: H5
+    gate: 3
+    design: factorial
+    uncertainty: Do conclusions hold across Sindhi/Urdu, domains, and ZWNJ-present vs absent words?
+    competing_explanations:
+      - effect generalises
+      - effect is language- or domain-specific
+    distinguishing_observation: B1 deltas per language x domain x ZWNJ-presence stratum.
+    controlled: [method configs, vocabulary sizes, seeds]
+    nuisance: [corpus size differences]
+    baselines: [unigram]
+    intervention: dataset and stratum
+    primary_metric: boundary_f1 delta per stratum
+    secondary_metrics: [fertility delta per stratum]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      effect generalises: same sign and overlapping CIs across strata
+      effect is language- or domain-specific: sign or magnitude differs across strata
+    falsification: General claims fail if strata disagree in sign.
+    abandon_if: Effect in one stratum only -> restrict claim to that stratum.
+    followups:
+      generalises: proceed to Gate 5
+      specific: investigate what distinguishes the stratum
+    resources: {data: "TODO: Sindhi and Urdu corpora with domain labels"}
+    artifacts: []
+    config: null
+    status: registered
+
+  - exp_id: G1-downstream-validation
+    family: G
+    hypothesis: H7
+    gate: 5
+    design: paired
+    uncertainty: Does better intrinsic segmentation translate into downstream gains?
+    competing_explanations:
+      - intrinsic gains transfer
+      - intrinsic gains do not transfer
+      - downstream differences come from sequence length alone
+    distinguishing_observation: Paired task metrics under identical controls, with character-budgeted sequences.
+    controlled: [training data, steps, vocabulary size, sequence policy, architecture, optimiser, seeds]
+    nuisance: [initialisation]
+    baselines: [unigram, bpe]
+    intervention: best intrinsic system from Gate 3
+    primary_metric: "TODO(prereg): task metric per task"
+    secondary_metrics: [bits_per_char (bigram proxy), sequence length, compute]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      intrinsic gains transfer: task metric delta CI excludes 0 in favour of the system
+      intrinsic gains do not transfer: CI includes 0
+      downstream differences come from sequence length alone: delta vanishes under character-budgeted sequences
+    falsification: H7 (no necessary transfer) is supported if CIs include 0 despite intrinsic gains.
+    abandon_if: Not applicable until Gate 3 passes; report the distinction rather than changing the claim.
+    followups:
+      transfer: report both
+      no transfer: report intrinsic/downstream distinction as a finding
+    resources: {gpu: "1x T4", data: "TODO"}
+    artifacts: []
+    config: configs/eval/downstream.yaml
+    status: registered
+
+  - exp_id: G2-entropy-ablation
+    family: B
+    hypothesis: H8
+    gate: 4
+    design: paired
+    uncertainty: Does an entropy term add a reproducible benefit over the identical no-entropy variant?
+    competing_explanations:
+      - entropy term helps
+      - entropy term is redundant with alpha / lambda
+    distinguishing_observation: Paired F1 with vs without the term, everything else identical.
+    controlled: [all B1 controls, lambda, alpha]
+    nuisance: [corpus subsample]
+    baselines: [same model without entropy term]
+    intervention: "Objective F (NOT IMPLEMENTED; out of scope until Gate 4)"
+    primary_metric: boundary_f1
+    secondary_metrics: [segmentation entropy]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      entropy term helps: CI over seeds excludes 0
+      entropy term is redundant with alpha / lambda: no difference once alpha is tuned
+    falsification: Drop the term if it shows no reproducible benefit.
+    abandon_if: No reproducible benefit -> remove the term.
+    followups:
+      helps: novelty screen against entropy-regularised segmentation literature
+      redundant: document equivalence to temperature
+    resources: {cpu_minutes: TODO}
+    artifacts: []
+    config: null
+    status: registered
+
+  # ---- Added 2026-10-29 after the first real-data pilot (motivated by measured results) ----
+
+  - exp_id: A3-zwnj-normative-vs-actual
+    family: A
+    hypothesis: H2
+    gate: 1
+    design: audit
+    uncertainty: Does ZWNJ occur in real text where normative orthography places it?
+    competing_explanations:
+      - writers use ZWNJ as the norm prescribes
+      - writers omit ZWNJ and join or space the parts
+    distinguishing_observation: >-
+      Occurrences of Zia et al. ZWNJ-annotated word types in real corpora, written with
+      vs without ZWNJ.
+    controlled: [word list (Zia types), unicode form, corpus filters]
+    nuisance: [domain, corpus size]
+    baselines: [none (descriptive)]
+    intervention: none
+    primary_metric: share of occurrences written with ZWNJ
+    secondary_metrics: [ZWNJ per 100k words per corpus]
+    seeds: [0]
+    expected_outcomes:
+      writers use ZWNJ as the norm prescribes: share near 1
+      writers omit ZWNJ and join or space the parts: share near 0
+    falsification: A share near 1 would restore ZWNJ as a usable signal.
+    abandon_if: Share near 0 -> drop ZWNJ-based supervision or normalization claims for real text.
+    followups:
+      omitted: treat sub-word boundaries as latent; test statistical recovery (C5)
+      used: return to the ZWNJ-loss objective (Objective D)
+    resources: {cpu_minutes: 5}
+    artifacts: [docs/findings_pilot.md]
+    config: configs/run/pilot_wiki.yaml
+    status: run
+
+  - exp_id: C4-trainonly-heldout-lemmas
+    family: C
+    hypothesis: H4
+    gate: 3
+    design: paired
+    uncertainty: Does boundary supervision used only during EM improve segmentation of lemmas it never covered?
+    competing_explanations:
+      - morphological generalisation through the vocabulary
+      - generic boundary-density effect
+      - no effect
+    distinguishing_observation: Held-out-lemma F1/recall/coherence vs plain Unigram and vs the fertility-matched random-boundary control.
+    controlled: [vocabulary size, corpus, seeds, supervision coverage, boundary count per word]
+    nuisance: [training subsample]
+    baselines: [unigram, bpe, random-boundary control]
+    intervention: unigram_hard_trainonly / unigram_soft_trainonly
+    primary_metric: boundary_f1 on held-out-lemma silver types
+    secondary_metrics: [recall, paradigm_coherence, fertility]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      morphological generalisation through the vocabulary: real > random ≈ plain
+      generic boundary-density effect: real ≈ random > plain
+      no effect: real ≈ plain
+    falsification: Real supervision not better than the random control.
+    abandon_if: Random control recovers most of the gain.
+    followups:
+      generalisation: human gold check; downstream (Gate 5); larger corpora (scale)
+      density: report as artefact
+    resources: {cpu_minutes: 40}
+    artifacts: [runs/SD-EVAL-summary-dev, runs/UR-EVAL-summary-dev]
+    config: configs/run/pilot_wiki.yaml
+    status: run
+
+  - exp_id: C5-zia-compound-transfer
+    family: C
+    hypothesis: H4
+    gate: 3
+    design: paired
+    uncertainty: Do normative ZWNJ annotations, transferred as supervision, help recover compound boundaries in ZWNJ-free text?
+    competing_explanations:
+      - supervision adds information
+      - statistics already recover compound boundaries
+    distinguishing_observation: Recall on held-out Zia compound types, with vs without Zia supervision.
+    controlled: [vocabulary size, corpus, seeds]
+    nuisance: [training subsample]
+    baselines: [unigram, bpe]
+    intervention: unigram_hard_trainonly with Zia-train supervision
+    primary_metric: boundary recall on held-out Zia types
+    secondary_metrics: [F1 (not meaningful: only ZWNJ boundaries annotated)]
+    seeds: [0, 1, 2]
+    expected_outcomes:
+      supervision adds information: recall gain with CI excluding 0
+      statistics already recover compound boundaries: high baseline recall, negligible gain
+    falsification: Negligible gain.
+    abandon_if: Negligible gain -> do not pursue ZWNJ-annotation transfer.
+    followups:
+      negligible: report; focus supervision on inflection (C4)
+    resources: {cpu_minutes: 15}
+    artifacts: [runs/UR-urdu_zia-EVAL-summary-dev]
+    config: configs/run/pilot_zia.yaml
+    status: run
