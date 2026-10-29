@@ -26,6 +26,12 @@ boundaries, so only recall is meaningful against it.
 sheets, any rule-based or FST analyzer, a Unicode joining-class file, and native-speaker
 review of anything.
 
+**Review tooling exists, but no labels have been collected yet (2026-10-30).**
+`scripts/make_review_sheets.py` wrote the boundary, ZWNJ and letter-variant sheets for
+both languages to `data/audit/review/` (local, git-ignored), and
+`scripts/ingest_review.py` validates and imports them. The importer is tested on
+synthetic rows only. Nothing produced from these sheets is in any result yet.
+
 ## 1a. Real-data pilot results (exploratory; dev splits; prereg NOT frozen)
 
 Summarised in `docs/findings_pilot.md`, with run IDs. In short:
@@ -160,4 +166,5 @@ The repository has been `git init`-ed with **no commits**, so every run record h
 | `scripts/{build_silver,build_zia_gold,codepoint_variants,06_lm_proxy}.py` | silver/gold construction, orthographic variant audit, Gate 5 proxy |
 | `configs/data/{sindhi,urdu}_{web,web_audit,randctrl,20k}.yaml`, `configs/data/urdu_zia*.yaml`, `configs/tokenizer/*_trainonly.yaml`, `configs/eval/intrinsic_silver.yaml`, `configs/run/pilot_{zia,ctrl,scale}.yaml` | domain, negative-control, scale and train-only conditions |
 | `docs/findings_pilot.md` | pilot report |
+| `scripts/{make_review_sheets,ingest_review}.py`, `audit/REVIEWING.md`, `tests/test_review.py` | native-speaker review workflow |
 | `tests/conftest.py`, `data/*/README.md`, `.gitignore`, `requirements*.lock` | test import path, documented empty directories, hygiene, pinned dependencies |
