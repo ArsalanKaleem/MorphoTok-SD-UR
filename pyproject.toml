@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "morphtok-sd-ur"
+version = "0.1.0"
+description = "Falsification-first research framework for morphology- and ZWNJ-aware tokenization of Sindhi and Urdu"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "TODO: choose a licence before release" }
+dependencies = [
+  "pyyaml==6.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+  "ruff==0.17.2",
+  "pre-commit==4.7.0",
+]
+
+data = [
+  "pyarrow==26.0.0",  # only for scripts/prepare_wikipedia.py (parquet input)
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "scripts", "tests"]
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "D", "S", "BLE", "RUF"]
+ignore = [
+  "D105", "D107", "D203", "D213",
+  "S101",    # asserts are fine in tests and internal invariants
+  "S311",    # random is used for seeded experiments, not cryptography
+  "RUF001", "RUF002", "RUF003",  # Unicode format characters are the subject of study
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+"scripts/*" = ["D401"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 130  # formatter wraps at 110; long string literals may run to 130
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
