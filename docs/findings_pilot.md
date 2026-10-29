@@ -172,14 +172,16 @@ slows that erosion.
 
 ## 9. Recommended next steps (smallest informative experiments first)
 
-1. **Human gold, ~300 Sindhi + ~300 Urdu held-out word types** (inflection boundaries),
-   using `audit/annotation_guidelines.md`. This turns §3 from silver to gold evidence, and
+1. **Human gold, ~300 Sindhi + ~300 Urdu held-out word types** (inflection boundaries):
+   sheets ready in `data/audit/review/<lang>_boundaries.tsv` (`make review-sheets`;
+   instructions in `audit/REVIEWING.md`). This turns §3 from silver to gold evidence, and
    is the single most valuable addition.
 2. **Label the two ZWNJ annotation sheets** (Sindhi: all 109 Wikipedia occurrences; Urdu:
-   236 sampled) to close H2 for *actual* usage.
+   236 sampled; `data/audit/review/<lang>_zwnj.tsv`) to close H2 for *actual* usage.
 3. **Small neural LM (Gate 5)** on one T4: `unigram` vs `unigram_hard_trainonly`, same
    character budget, 3 seeds, to test whether the intrinsic gain matters downstream.
-4. **Native-speaker review of the Urdu yeh/kaf/heh variant groups** (§2). If approved, a
+4. **Native-speaker review of the yeh/kaf/heh spelling pairs** (§2;
+   `data/audit/review/<lang>_letter_variants.tsv`). If approved, a
    `selective` folding rule has measurable reach (≈ 0.3% of words, about 30× ZWNJ in
    Wikipedia).
 5. **Freeze the preregistration** with thresholds set from these pilot variances, then
@@ -191,4 +193,6 @@ slows that erosion.
   (re-run after the last code change).
 * All runs, including the synthetic integration runs, are in `runs/ledger.jsonl`. No
   failed runs were dropped.
-* Nothing committed to git. The preregistration is not frozen.
+* The code, configs and docs are on GitHub (ArsalanKaleem/MorphoTok-SD-UR). Data, derived
+  silver/gold files, review sheets and `runs/` are local only (licences; reproducible with
+  `make real-data`). The preregistration is not frozen.
