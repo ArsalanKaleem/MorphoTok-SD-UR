@@ -73,7 +73,7 @@ def pairwise_report(ratings: Mapping[str, Sequence[tuple[str, str]]]) -> dict[st
 
 
 def _load(path: Path) -> dict[str, list[tuple[str, str]]]:
-    lines = path.read_text(encoding="utf-8").splitlines()
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
     idx = {h: i for i, h in enumerate(lines[0].split("\t"))}
     out: dict[str, list[tuple[str, str]]] = {}
     for ln in lines[1:]:
