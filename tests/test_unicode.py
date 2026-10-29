@@ -114,3 +114,9 @@ def test_occurrences_and_oracle_labels() -> None:
     r = morph_rate(labels)
     assert r["morph_rate"] == 0.5 and r["denominator"] == 2
     assert len(stratified_sample(occs, 1, seed=0)) >= 1
+
+
+def test_foreign_and_error_excluded_from_morph_rate() -> None:
+    r = morph_rate({"a": "MORPH", "b": "ORTHO", "c": "FOREIGN", "d": "ERROR", "e": "AMBIG"})
+    assert r["denominator"] == 3
+    assert r["morph_rate"] == pytest.approx(1 / 3)
