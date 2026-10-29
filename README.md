@@ -111,6 +111,24 @@ synthetic data only:
 5. Only then run `04_intrinsic_eval.py --split test --final`. On real data it refuses if
    the prereg is not frozen.
 
+## Native-speaker review (the current bottleneck)
+
+The pilot's main result rests on *silver* labels. Three review tasks turn it into human
+evidence. Each is done per language and needs no programming:
+
+| Task | Sheet | Settles |
+|---|---|---|
+| Morpheme boundaries for 300 held-out words | `<lang>_boundaries.tsv` | the main result (unseen-word segmentation) and silver-label precision |
+| Label each ZWNJ occurrence | `<lang>_zwnj.tsv` | H2: is ZWNJ morphological in actual usage? |
+| SAME / DIFFERENT for spelling pairs | `<lang>_letter_variants.tsv` | which letter normalizations are legitimate |
+
+```
+make review-sheets     # once: writes data/audit/review/ (git-ignored)
+make review-ingest     # any time: progress, row-level problems, imports answers
+```
+
+Instructions for reviewers: [`audit/REVIEWING.md`](audit/REVIEWING.md).
+
 ## Layout
 
 ```
