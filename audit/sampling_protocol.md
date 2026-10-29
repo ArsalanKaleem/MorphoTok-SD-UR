@@ -30,3 +30,17 @@ Implemented in `src/morphtok/unicode_audit/contexts.py` and `scripts/00_zwnj_aud
   `word<TAB>boundaries<TAB>source<TAB>split`, boundaries as comma-separated positions in
   the stripped word; lines starting with `#` are comments.
 * **Sample sizes:** UNRESOLVED until a pilot estimate of F1 variance is available.
+
+## Review sheets as generated (`scripts/make_review_sheets.py`, 2026-10-30)
+
+* **Boundaries:** 300 word types per language, drawn uniformly (seed 20261030) from the
+  **dev-split** types of the lemma-derived silver data (`data/gold/<lang>_silver.tsv`),
+  i.e. lemmas the training-time supervision never covered, so human labels evaluate the
+  same held-out set as the pilot. Silver boundaries are **not shown** (to avoid
+  anchoring). One Wikipedia context per word, when the word occurs.
+* **ZWNJ:** the Gate 1 sheets unchanged (Sindhi: all 109 Wikipedia occurrences; Urdu:
+  236 stratified from 3,547).
+* **Letter variants:** for word groups whose spellings differ only in yeh/kaf/heh code
+  points, ordered by total frequency, each variant seen at least twice is paired with
+  the group's most frequent spelling; the first 150 pairs per language. This is a
+  frequency-weighted, not random, sample: it covers the variants with the most reach.
