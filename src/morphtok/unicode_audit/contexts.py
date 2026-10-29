@@ -115,6 +115,7 @@ def load_annotations(path: Path) -> dict[str, list[tuple[str, str]]]:
     idx = {h: i for i, h in enumerate(header)}
     for line in lines[1:]:
         cols = line.split("\t")
+        cols += [""] * (len(header) - len(cols))  # spreadsheet apps drop empty trailing cells
         label = cols[idx["label"]].strip()
         if label:
             if label not in LABELS:
