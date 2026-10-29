@@ -110,7 +110,7 @@ def write_annotation_sheet(sample: list[ZwnjOccurrence], path: Path) -> None:
 def load_annotations(path: Path) -> dict[str, list[tuple[str, str]]]:
     """``occ_id -> [(annotator, label), ...]`` from a completed sheet."""
     out: dict[str, list[tuple[str, str]]] = {}
-    lines = path.read_text(encoding="utf-8").splitlines()
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
     header = lines[0].split("\t")
     idx = {h: i for i, h in enumerate(header)}
     for line in lines[1:]:
