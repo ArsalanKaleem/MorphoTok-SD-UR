@@ -1,0 +1,10 @@
+# Unigram with ZWNJ removed before training and decoding (H1 control).
+name: unigram_zwnj_norm
+type: unigram
+normalization: {unicode_form: NFC, zwnj: remove}
+requires_analyzer: false
+max_piece_len: 8
+train_mode: none
+decode_mode: none
+lambda: 0.0
+trainer: {seed_multiplier: 4, shrink: 0.6, em_iters: 1, final_em_iters: 2, min_seed_freq: 2}

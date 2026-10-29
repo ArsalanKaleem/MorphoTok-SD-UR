@@ -1,0 +1,5 @@
+# Word-internal BPE baseline (pure-Python reference). Constraints are ignored by design.
+name: bpe
+type: bpe
+normalization: {unicode_form: NFC, zwnj: preserve}
+requires_analyzer: false

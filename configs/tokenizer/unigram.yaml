@@ -1,0 +1,18 @@
+# Plain Unigram LM on the reference lattice. The reference condition for all
+# paired comparisons in Gates 0 and 3.
+name: unigram
+type: unigram
+normalization: {unicode_form: NFC, zwnj: preserve}
+requires_analyzer: false
+max_piece_len: 8
+train_mode: none
+decode_mode: none
+lambda: 0.0
+trainer:
+  # PILOT settings chosen for CPU speed on the synthetic corpus, not tuned values.
+  # TODO(pilot): revisit seed_multiplier/shrink/em_iters on real data and record the choice.
+  seed_multiplier: 4
+  shrink: 0.6
+  em_iters: 1
+  final_em_iters: 2
+  min_seed_freq: 2

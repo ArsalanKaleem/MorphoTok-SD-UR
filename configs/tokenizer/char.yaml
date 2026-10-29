@@ -1,0 +1,6 @@
+# Character-level control (Family B). Added beyond the required tree.
+# Vocabulary = character inventory; it is NOT vocabulary-matched.
+name: char
+type: char
+normalization: {unicode_form: NFC, zwnj: preserve}
+requires_analyzer: false
