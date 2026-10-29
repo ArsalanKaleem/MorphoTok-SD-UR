@@ -1,0 +1,152 @@
+# Objective registry (Part IV). Derivations: docs/objectives.md.
+# General form (placeholders; each term must be defined and justified independently):
+#   L = L_base + lambda_m L_morph + lambda_z L_orth + lambda_c L_confidence + lambda_r R
+# No objective may have status "contribution" unless its novelty_screen is complete,
+# no equivalence was found, and sources were verified (enforced in objectives.py).
+# Status values: reference | candidate | deferred | retired | contribution.
+
+objectives:
+
+  - objective_id: A
+    status: reference   # 2026-10-29: equivalent to posterior regularization with a fixed dual (see screen)
+    name: Soft boundary prior on the Unigram lattice
+    definition: >-
+      P(s|w) ∝ exp( Σ_{e∈s} log p(e) − λ V(s) ),  V(s) = Σ_k [k∉B(s)]·a_k + [k∈B(s)]·f_k,
+      a_k = π(c_k) for MANDATORY/PREFERRED evidence, f_k = π(c_k) for FORBIDDEN evidence, 0 for UNKNOWN.
+      Training maximises Σ_w f(w) log Z_λ(w) over log p (EM); decoding is Viterbi under the same scores.
+    motivation: Encourage segmentations consistent with analyzer boundaries without excluding alternatives.
+    assumptions: [analyzer boundaries are better than chance, costs are boundary-local, UNKNOWN carries no cost]
+    relationship_to_established: >-
+      Training = posterior regularization (Ganchev et al. 2010) applied to the Unigram LM lattice with a
+      factored boundary-violation feature and a fixed dual weight λ; decoding with constraints = PR's
+      "predict with projected q". Known framework; NOT an algorithmic contribution.
+    optimization: EM with constrained E-step (exact forward-backward); M-step closed form.
+    complexity: O(n·L) per word per E-step (n chars, L max piece length); same as plain Unigram.
+    hyperparameters: {lambda: "nats per unit penalty", penalty: "mapping π: [0,1] -> nats"}
+    failure_modes: [over-trust of noisy analyzers, longer sequences, gains from boundary density not morphology]
+    baselines: [unigram, unigram_hard (B), unigram_zwnj_norm, bpe, random-boundary control]
+    falsification_experiment: B1 + B2 (soft vs hard; lambda curve monotone toward hard ⇒ unnecessary)
+    evidence_for_contribution: Soft > hard and > plain on test at matched vocab over ≥3 seeds AND survives C2/C3/D1.
+    novelty_screen:
+      closest_existing_formulation: "posterior regularization (ganchev2010, Prop. 2.1-2.2, Eq. 5, 8); semi-supervised Morfessor (kohonen2010); pre-segmentation = hard limit (brahma2025, vemula2025)"
+      term_by_term_comparison: "docs/novelty_screening.md#objective-a"
+      equivalence_to_known_method: true      # soft E-step = PR projection q ∝ p·exp(-λ·V) with λ fixed instead of dual-optimised
+      terminology_search: "4 web searches on 2026-10-29, listed in docs/novelty_screening.md"
+      smallest_new_element: "none algorithmic; only the application (Unigram tokenizer vocabulary learning, train-only use, ZWNJ-annotation transfer) and its evaluation"
+      isolating_baseline: "unigram_hard(_trainonly), unigram, random-boundary control"
+      disproving_result: "no held-out gain over unigram at matched V over 3 seeds, or gain matched by random control"
+      sources_verified: [kudo2018, gronroos2020, brahma2025, vemula2025, ganchev2010, kohonen2010]
+
+  - objective_id: B
+    status: reference
+    name: Hard-constrained segmentation
+    definition: >-
+      P(s|w) ∝ exp(Σ log p(e)) · 1[s ∈ F(w)], F(w) = {s : MANDATORY ⊆ B(s), FORBIDDEN ∩ B(s) = ∅}.
+      If F(w) = ∅: documented fallback (error, or unconstrained decoding, counted).
+    motivation: Simplest way to use trusted analyzer boundaries.
+    assumptions: [analyzer boundaries are correct where present]
+    relationship_to_established: Equivalent to morphological pre-segmentation (MANDATORY-only). Not a contribution.
+    optimization: EM with edges removed from the lattice.
+    complexity: O(n·L) per word.
+    hyperparameters: {hard_fallback: "error | unconstrained"}
+    failure_modes: [infeasible words, propagation of analyzer errors]
+    baselines: [unigram]
+    falsification_experiment: B1 (if hard ≥ soft, keep B, retire A)
+    evidence_for_contribution: Not applicable (reference method).
+    novelty_screen:
+      closest_existing_formulation: "morphological pre-segmentation before subword training (brahma2025, vemula2025)"
+      term_by_term_comparison: "MANDATORY-only hard lattice == Unigram on pre-segmented pieces (docs/novelty_screening.md)"
+      equivalence_to_known_method: true
+      terminology_search: "4 web searches on 2026-10-29"
+      smallest_new_element: "none (FORBIDDEN constraints unused)"
+      isolating_baseline: "unigram"
+      disproving_result: "n/a (reference)"
+      sources_verified: [brahma2025, vemula2025]
+
+  - objective_id: C
+    status: candidate
+    name: Confidence-weighted supervision
+    definition: >-
+      Objective A with π(c) chosen from {linear, log_odds, threshold, uniform}; confidence from
+      aggregate(): c_k = max_a c_a · Σ_{a∋k} c_a / Σ_a c_a.
+    motivation: Distinguish strong, weak and missing evidence.
+    assumptions: [confidences are informative about correctness (check calibration, Gate 2)]
+    relationship_to_established: Weighted constraints; UNVERIFIED relation to confidence-weighted distant supervision.
+    optimization: As A.
+    complexity: As A.
+    hyperparameters: {penalty: mapping, min_confidence: "probability threshold"}
+    failure_modes: [uncalibrated confidences, constant confidences make weighting a no-op]
+    baselines: [uniform penalty (same constraints, confidence ignored)]
+    falsification_experiment: C2 penalty stage (confidence-weighted vs uniform under noise)
+    evidence_for_contribution: Weighted > uniform under realistic analyzer noise on test.
+    novelty_screen: {}
+
+  - objective_id: D
+    status: candidate
+    name: Orthographic (ZWNJ) prior separate from morphology
+    definition: >-
+      A separate boundary class for ZWNJ positions with its own weight λ_z (PREFERRED or FORBIDDEN),
+      never merged into the morphological constraint set. Implemented today only as policies
+      (preserve/remove/boundary_marker/selective); the λ_z prior is NOT implemented.
+    motivation: Model ZWNJ handling without equating ZWNJ with morphology (pending Gate 1).
+    assumptions: [Gate 1 shows how ZWNJ relates to boundaries]
+    relationship_to_established: Normalization / pre-tokenization rules; UNVERIFIED.
+    optimization: As A with an extra boundary class.
+    complexity: As A.
+    hyperparameters: {lambda_z: "nats per ZWNJ position"}
+    failure_modes: [double counting when ZWNJ coincides with analyzer boundaries]
+    baselines: [remove, boundary_marker policies]
+    falsification_experiment: A1 + A2; then λ_z vs boundary_marker at matched vocab
+    evidence_for_contribution: Beats both remove and boundary_marker policies on test.
+    novelty_screen: {}
+
+  - objective_id: E
+    status: candidate
+    name: Alternative sampling objectives
+    definition: Sampling from P_α(s|w) ∝ exp(α Σ φ(e)) with/without soft costs or hard exclusions.
+    motivation: Constraints may matter differently under subword regularisation than under Viterbi.
+    assumptions: [posterior is diverse enough at the chosen α (E1)]
+    relationship_to_established: Subword-regularisation style sampling; UNVERIFIED citation.
+    optimization: Forward-filter / backward-sample.
+    complexity: O(n·L) per sample.
+    hyperparameters: {alpha: "inverse temperature (dimensionless)"}
+    failure_modes: [near-deterministic posterior makes sampling moot]
+    baselines: [Viterbi]
+    falsification_experiment: E1
+    evidence_for_contribution: Downstream benefit (Gate 5) attributable to constrained sampling.
+    novelty_screen: {}
+
+  - objective_id: F
+    status: deferred
+    name: Entropy term (Gate 4 only)
+    definition: >-
+      NOT DEFINED. Before implementation specify: which distribution (per-word segmentation posterior
+      P_λ(s|w) or the corpus unigram distribution p), the sign, its effect on optimisation, and its
+      relation to α. Diagnostic H(P(s|w)) is available via Lattice.entropy() and is not an objective term.
+    motivation: Out of scope until earlier gates justify it.
+    assumptions: []
+    relationship_to_established: UNVERIFIED.
+    optimization: TODO
+    complexity: TODO
+    hyperparameters: {}
+    failure_modes: [redundant with temperature α]
+    baselines: [identical model without the term]
+    falsification_experiment: G2-entropy-ablation
+    evidence_for_contribution: Reproducible benefit over the identical no-entropy variant.
+    novelty_screen: {}
+
+  - objective_id: G
+    status: candidate
+    name: Data-driven alternatives (placeholder)
+    definition: Added only when a recorded failure (runs/followups.jsonl) motivates a specific objective.
+    motivation: Evidence-driven discovery.
+    assumptions: []
+    relationship_to_established: Must be screened (docs/novelty_screening.md) before implementation.
+    optimization: TODO
+    complexity: TODO
+    hyperparameters: {}
+    failure_modes: []
+    baselines: []
+    falsification_experiment: Defined with the follow-up that motivates it.
+    evidence_for_contribution: As for A.
+    novelty_screen: {}
