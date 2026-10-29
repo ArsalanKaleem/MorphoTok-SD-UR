@@ -1,0 +1,20 @@
+# Variant of unigram_soft.yaml: constraints shape the vocabulary (E-step) but decoding is
+# unconstrained, so the tokenizer needs no analyzer at inference time.
+# Unigram with a confidence-weighted SOFT boundary prior (Objectives A/C).
+# Uses the SAME constraint set as unigram_hard so that the lambda -> inf limit is the
+# hard condition (see docs/lattice.md).
+name: unigram_soft_trainonly
+type: unigram
+normalization: {unicode_form: NFC, zwnj: preserve}
+requires_analyzer: true
+max_piece_len: 8
+train_mode: soft
+decode_mode: none   # TRAIN-ONLY supervision: no analyzer needed at inference
+lambda: 2.0   # PILOT value only (nats per unit penalty). TODO(pilot): choose on dev via 05_ablation_grid.
+supervision:
+  proposed_kind: MANDATORY
+  min_confidence: 0.0
+  penalty: linear
+  covered_absent: unknown
+  format_char_attach: left
+trainer: {seed_multiplier: 4, shrink: 0.6, em_iters: 1, final_em_iters: 2, min_seed_freq: 2}

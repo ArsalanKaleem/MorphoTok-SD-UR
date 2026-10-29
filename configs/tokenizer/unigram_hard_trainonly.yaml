@@ -1,0 +1,21 @@
+# Variant of unigram_hard.yaml: constraints shape the vocabulary (E-step) but decoding is
+# unconstrained, so the tokenizer needs no analyzer at inference time.
+# Unigram with HARD analyzer constraints (Objective B): MANDATORY boundaries exclude
+# spanning edges in training (E-step) and decoding. Words whose hard lattice is
+# infeasible fall back to the unconstrained lattice and are COUNTED (never silent).
+name: unigram_hard_trainonly
+type: unigram
+normalization: {unicode_form: NFC, zwnj: preserve}
+requires_analyzer: true
+max_piece_len: 8
+train_mode: hard
+decode_mode: none   # TRAIN-ONLY supervision: no analyzer needed at inference
+lambda: 0.0
+hard_fallback: unconstrained
+supervision:
+  proposed_kind: MANDATORY
+  min_confidence: 0.0
+  penalty: linear
+  covered_absent: unknown
+  format_char_attach: left
+trainer: {seed_multiplier: 4, shrink: 0.6, em_iters: 1, final_em_iters: 2, min_seed_freq: 2}
