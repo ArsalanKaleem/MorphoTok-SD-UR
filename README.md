@@ -15,6 +15,13 @@ works, not to show that it does.
 > 3. Hard supervision ≥ soft prior (the λ curve rises monotonically to the hard limit).
 > 4. On a token-bigram proxy the gain does not transfer (0.2–0.6% worse bits/char).
 >
+> 5. **POS study (combined plan, CPU pilot):** character input makes taggers far more robust to
+>    spelling perturbation in both languages, and gated character fusion with the
+>    morph-supervised tokenizer gives the best accuracy on unseen lemmas. In Sindhi the
+>    tokenizer's morphology adds a significant gain *inside* fusion at every budget; in Urdu
+>    the gain points the same way but is not significant. See
+>    [`docs/findings_pos.md`](docs/findings_pos.md); the XLM-R version has not run yet.
+>
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation
 > uses silver data on dev splits only; the preregistration is not frozen. See

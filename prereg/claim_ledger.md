@@ -14,6 +14,11 @@ Status values: **untested** · **pilot-only** · **supported** · **contradicted
 | Gains are not length/memorisation/artefact | H6 | C3 negative control, D1 strata | PILOT: random-boundary control with matched coverage, count *and* tokens/word recovers ≤~20% (sd) / none (ur) of the F1 gain | pilot-only |
 | Intrinsic gains need not transfer downstream | H7 | G1 | PROXY only: token-bigram bits/char is 0.2–0.6% *worse* for the supervised tokenizer in both languages (docs/findings_pilot.md §5c); no neural LM yet | untested (proxy consistent) |
 | Method is transparent and cheap | H8 | complexity analysis + timings | reference implementation exists; O(n·L) per word documented | pilot-only |
+| Character fusion improves unseen-lemma POS accuracy (C1) | C1 | P1 grid, paired vs word, ≥3 seeds, 2 languages | PILOT (CPU BiLSTM, not XLM-R): `gated:*` beats `word` on unseen lemmas at full budget (sd +0.050 to +0.076, CIs exclude 0; ur +0.079/+0.092, CIs include 0) | pilot-only |
+| Character input gives spelling robustness beyond random-noise robustness (C2) | C2 | confusable vs noise drops, native-approved variants | PILOT: char input cuts confusable-substitution drops by 0.2–0.4 in both languages; substitution not yet native-approved; edit count differs from the control | pilot-only |
+| Fusion gain is largest at low budgets (C3) | C3 | budget curves | PILOT: overall-accuracy gains vs word are largest at 1% (sd +0.14 to +0.18; ur up to +0.26) and shrink to ≈+0.01 at 100% | pilot-only |
+| Gated > parameter-matched concat (C4) | C4 | gated vs concat, paired | PILOT: only at the 10% budget, in both languages (unseen lemma ≈ +0.03) | pilot-only (partial) |
+| Tokenizer morphology and character input are complementary (C5) | C5 | gated:hard vs gated:unigram | PILOT: vs the same tokenizer without supervision (`gated:unigram`), sd +0.011 to +0.026 unseen-lemma at all budgets (CIs exclude 0); ur same direction, not significant. vs `gated:bpe` (sd): ahead but CIs include 0 | pilot-only (sd only; not shown vs BPE) |
 | Objective A is a new method | — | completed novelty screen (docs/novelty_screening.md) | Screen done: A = posterior regularization with a fixed dual (Ganchev et al. 2010); B = pre-segmentation | withdrawn |
 
 ## Change log
@@ -24,3 +29,4 @@ Status values: **untested** · **pilot-only** · **supported** · **contradicted
 | 2026-10-29 | H2 | untested → pilot-only | SD/UR-*G1*, data/gold/ur_zia_zwnj.stats.json |
 | 2026-10-29 | H4, H5, H6 | untested → pilot-only | SD/UR-EVAL-*, *-randctrl-* |
 | 2026-10-29 | Objective A novelty | untested → withdrawn | docs/novelty_screening.md |
+| 2026-11-05 | C1–C5 | (new) → pilot-only | SD-POS-*, UR-POS-*, docs/findings_pos.md |

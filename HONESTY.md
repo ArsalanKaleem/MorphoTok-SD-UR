@@ -80,6 +80,29 @@ that the instruments can detect confounds: the random-boundary control recovered
 the gain, `boundary_marker` raised F1 at no cost, and plain Unigram's F1 fell with word
 frequency. These are properties of the generator and the code, not of either language.
 
+## 3a. POS study (combined plan, 2026-11-04): what is real and what is not
+
+* **Run on CPU, real data:** BiLSTM taggers (`src/morphtok/models/tagger.py`,
+  `scripts/07_pos_tagging.py`) on the official UD Sindhi-Isra and Urdu-UDTB splits, at
+  1% / 10% / 100% training budgets, 5 seeds (low budgets) or 3 seeds (full). These are
+  **small models trained from scratch, not XLM-R.** Their numbers say nothing about how a
+  pretrained transformer would behave.
+* **Not run at all:** `scripts/xlmr_fusion.py` (XLM-R + character fusion). It was written
+  for a T4 and syntax-checked only: this machine has no GPU, and `transformers` is not installed.
+* **The spelling-perturbation test is a hypothesis.** `test_confusable` substitutes Arabic
+  yeh → Farsi yeh (Sindhi) and Farsi yeh → Arabic yeh plus keheh → Arabic kaf (Urdu).
+  Whether these are real-world equivalent spellings is exactly what the native review
+  (Task 3) decides; until then, read it as "visually confusable substitution". The
+  random-letter control edits one letter of the *same* tokens, so the two perturbations
+  differ in edit count per token (all occurrences vs one letter). Compare drops with that
+  in mind.
+* **Leakage control:** the morph-supervised tokenizer used here (`*_postok`) is supervised
+  only by the UD *train* split (`build_silver.py --ud-train-only`), so no dev/test lemma
+  reaches it. Unseen-lemma status is computed per training budget.
+* The CNN-speed fix (convolving only real words; 16-character cap, truncating 0.005% of
+  tokens) was applied before the reported grid. Earlier smoke-test records are superseded
+  in the report (the latest record per system/budget/seed is used).
+
 ## 4. Stubs (interfaces only; raise or return "unavailable")
 
 * `analyzers/fst_urdu.py`: subprocess plumbing only; `parse_output` raises
@@ -167,4 +190,5 @@ The repository has been `git init`-ed with **no commits**, so every run record h
 | `configs/data/{sindhi,urdu}_{web,web_audit,randctrl,20k}.yaml`, `configs/data/urdu_zia*.yaml`, `configs/tokenizer/*_trainonly.yaml`, `configs/eval/intrinsic_silver.yaml`, `configs/run/pilot_{zia,ctrl,scale}.yaml` | domain, negative-control, scale and train-only conditions |
 | `docs/findings_pilot.md` | pilot report |
 | `scripts/{make_review_sheets,ingest_review}.py`, `audit/REVIEWING.md`, `tests/test_review.py` | native-speaker review workflow |
+| `src/morphtok/models/`, `scripts/{build_pos_tasks,07_pos_tagging,08_pos_report,xlmr_fusion}.py`, `configs/data/*_postok.yaml`, `configs/run/pilot_postok.yaml`, `tests/test_{tagger,pos_tasks}.py`, `docs/combined_plan.md`, `requirements-models.lock` | combined-plan POS study (CPU taggers; untested GPU script) |
 | `tests/conftest.py`, `data/*/README.md`, `.gitignore`, `requirements*.lock` | test import path, documented empty directories, hygiene, pinned dependencies |
