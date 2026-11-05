@@ -16,7 +16,7 @@ RUN := $(PY) -X utf8
 ARGS := --config $(CONFIG) --data $(DATA)
 
 .PHONY: setup lint format test gate0 gate1 gate2 tokenizer intrinsic ablations lmproxy \
-        real-data review-sheets review-ingest fixture prereg-status prereg-freeze clean
+        real-data review-sheets review-ingest pos-tasks pos pos-report fixture prereg-status prereg-freeze clean
 
 setup:
 	$(PYBASE) -m venv .venv
@@ -73,6 +73,20 @@ review-sheets:
 
 review-ingest:
 	$(RUN) scripts/ingest_review.py
+
+# POS study (docs/combined_plan.md): tasks from UD, CPU taggers, report. POS_LANG=sd|ur
+POS_LANG ?= sd
+pos-tasks:
+	$(RUN) scripts/build_pos_tasks.py
+	for l in sd ur; do $(RUN) scripts/build_silver.py $$l --ud-train-only; done
+	$(RUN) scripts/03_train_tokenizers.py --config configs/run/pilot_postok.yaml --data sindhi_postok
+	$(RUN) scripts/03_train_tokenizers.py --config configs/run/pilot_postok.yaml --data urdu_postok
+
+pos:
+	$(RUN) scripts/07_pos_tagging.py --lang $(POS_LANG) --budgets 0.01 0.1 1 --epochs 25 --patience 3
+
+pos-report:
+	$(RUN) scripts/08_pos_report.py --lang $(POS_LANG)
 
 fixture:
 	$(RUN) -m morphtok.data.synthetic
