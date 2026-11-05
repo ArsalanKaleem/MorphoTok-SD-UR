@@ -463,3 +463,43 @@ experiments:
     artifacts: [runs/UR-urdu_zia-EVAL-summary-dev]
     config: configs/run/pilot_zia.yaml
     status: run
+
+  # ---- Combined plan (docs/combined_plan.md), registered 2026-11-04 before results ----
+
+  - exp_id: P1-pos-morph-vs-spelling
+    family: G
+    hypothesis: H7
+    gate: 5
+    design: factorial
+    uncertainty: >-
+      Does morphological information help POS tagging through generalization to unseen
+      lemmas, through robustness to spelling variants, or both, and does it matter whether
+      it enters via the tokenizer or via character features?
+    competing_explanations:
+      - morphological generalization
+      - orthographic robustness only
+      - no benefit beyond whole-word embeddings
+    distinguishing_observation: >-
+      Paired seed-matched accuracy deltas vs the word baseline on unseen-lemma tokens,
+      on confusable-spelling tokens, and on the matched random-noise control.
+    controlled: [tagger architecture, training budget, seeds, early-stopping rule, UD splits]
+    nuisance: [tokenizer seed, initialization]
+    baselines: [word, sub:unigram, sub:bpe]
+    intervention: char, sub:unigram_hard_trainonly, concat:unigram, gated:unigram, gated:unigram_hard_trainonly
+    primary_metric: unseen-lemma accuracy delta vs word (budget 0.1)
+    secondary_metrics: [all-token accuracy, confusable drop, noise drop, unseen-form accuracy]
+    seeds: [0, 1, 2, 3, 4]
+    expected_outcomes:
+      morphological generalization: unseen-lemma gain with CI excluding 0, independent of spelling gains
+      orthographic robustness only: gains on confusable/noise tokens but not on unseen lemmas
+      no benefit beyond whole-word embeddings: all deltas include 0
+    falsification: C1 fails if no system beats word on unseen lemmas at matched budget.
+    abandon_if: No system improves unseen-lemma accuracy -> report morphology as unhelpful for POS at this scale.
+    followups:
+      generalization: replicate with XLM-R on a T4 (scripts/xlmr_fusion.py)
+      robustness only: focus on orthographic normalization (native-approved variants)
+      gate no better than concat: drop the gate (C4)
+    resources: {cpu_hours: 3}
+    artifacts: [runs/SD-POS-report.md, runs/UR-POS-report.md]
+    config: null
+    status: registered
