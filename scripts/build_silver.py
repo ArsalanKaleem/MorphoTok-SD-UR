@@ -56,14 +56,33 @@ def main() -> int:
     ap.add_argument("lang", choices=sorted(SOURCES))
     ap.add_argument("--salt", default="morphtok-silver")
     ap.add_argument("--min-stem", type=int, default=2)
+    ap.add_argument(
+        "--ud-train-only",
+        action="store_true",
+        help="leakage-safe tokenizer supervision for the POS study: use only the official UD "
+        "*train* file (no UniMorph), mark every entry 'train', write <lang>_silver_udtrain.tsv",
+    )
     a = ap.parse_args()
     pairs: list[LemmaPair] = []
     used: list[str] = []
-    for f in SOURCES[a.lang]["ud"]:
+    ud_files = (
+        [f for f in SOURCES[a.lang]["ud"] if "-train." in f] if a.ud_train_only else SOURCES[a.lang]["ud"]
+    )
+    for f in ud_files:
         p = ROOT / "data" / "raw" / "ud" / f
         if p.exists():
             pairs += read_conllu(p, f"ud:{f.split('-')[0]}")
             used.append(p.relative_to(ROOT).as_posix())
+    if a.ud_train_only:
+        entries, stats = build_silver(pairs, a.salt, a.min_stem, OPEN)
+        for e in entries.values():
+            e.split = "train"
+        out = ROOT / "data" / "gold" / f"{a.lang}_silver_udtrain.tsv"
+        counts = write_silver_tsv(
+            entries, out, f"SILVER from UD TRAIN only ({', '.join(used)}); POS-study supervision"
+        )
+        print(json.dumps({"inputs": used, "derivation": dict(stats), "types": counts}, indent=1))
+        return 0
     for f in SOURCES[a.lang]["unimorph"]:
         p = ROOT / "data" / "raw" / "unimorph" / f
         if p.exists():
