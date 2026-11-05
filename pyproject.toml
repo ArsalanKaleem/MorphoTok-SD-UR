@@ -23,6 +23,9 @@ dev = [
 data = [
   "pyarrow==26.0.0",  # only for scripts/prepare_wikipedia.py (parquet input)
 ]
+models = [
+  "torch==2.15.0",  # POS taggers (scripts/07_pos_tagging.py); CPU wheel from download.pytorch.org/whl/cpu
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
