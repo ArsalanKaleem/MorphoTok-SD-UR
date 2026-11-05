@@ -1,0 +1,10 @@
+# Tokenizers for the POS study (combined plan, Phase 4). One tokenizer seed: tagger seeds
+# carry the variance in that study.
+data: sindhi_postok
+output_dir: runs
+tokenizers: [bpe, unigram, unigram_hard_trainonly]
+eval: configs/eval/intrinsic.yaml
+splits: {train: 1.0, dev: 0.0, test: 0.0}
+vocab_sizes: [4000]
+seeds: [0]
+train_fraction: 1.0

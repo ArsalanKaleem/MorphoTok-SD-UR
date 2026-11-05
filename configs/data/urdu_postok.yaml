@@ -1,0 +1,21 @@
+# Tokenizers for the POS study (combined plan): trained on 20k Wikipedia lines, with
+# supervision derived ONLY from the official UD train split (no dev/test lemmas can leak).
+name: urdu_postok
+language: ur
+synthetic: false
+corpus:
+  path: data/processed/ur_wiki20231101_pilot20000.txt
+  licence: "CC BY-SA 3.0 / GFDL (Wikipedia; per huggingface.co/datasets/wikimedia/wikipedia)"
+  domain: encyclopedia
+gold:
+  path: null
+zwnj_annotations:
+  path: null
+analyzer:
+  type: lemma_derived
+  silver_path: data/gold/ur_silver_udtrain.tsv
+  use_splits: [train]
+  base_confidence: 0.8
+split:
+  salt: morphtok-urdu
+  unit: line
