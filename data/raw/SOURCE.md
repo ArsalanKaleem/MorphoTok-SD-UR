@@ -62,3 +62,25 @@ cdn.jsdelivr.net; 993,008 bytes,
 `bde7eea3097ada3ef87f3ae589dcbc75a7b5e8d0aca1de98048f81dbbe87216d`) and its `LICENSE`
 (CC BY 4.0 legal text; README: "Data licensed under CC-BY 4.0"). Zia, Raza & Athar,
 COLING 2018. About 111k tokens with ZWNJ at sub-word boundaries.
+
+## sipos/ (SiPOS, Sindhi POS; received 2026-11-07)
+
+| File | Source | Bytes | SHA-256 |
+|---|---|---|---|
+| `1781940642529-SiPOS.tar.gz` | provided to the project owner (Downloads, 2026-11-07), in response to a request to the authors after the paper's GitHub link (github.com/AliWazir/SiPOS-Dataset) returned 404 | 895,016 | `4bcb908eb05e6b3f383ed836a949e8b801da13577010e7995d499cd46a2b44e5` |
+
+* Paper: Wazir Ali, Zenglin Xu, Jay Kumar. *SiPOS: A Benchmark Dataset for Sindhi
+  Part-of-Speech Tagging.* RANLP-SRW 2021, pp. 22–30 (Kawish and Awami-Awaz news; paper
+  reports 293,684 tokens, 6,784 sentences, Cohen's κ 0.872).
+* Archive content: one file, `SiPOS/SiPOS tagset.txt` (UTF-8, CRLF), extracted to
+  `extracted/`. Columns `TOKEN, TAG, UPOS, SPOS`, one token per line: **293,683 tokens,
+  no sentence boundaries, no lemmas, no splits, no licence file.**
+* **Licence: not stated in the archive.** Use for research evaluation only until the
+  authors confirm terms. Do not redistribute.
+* Checked 2026-11-07: no exact sentence overlap with UD Sindhi-Isra; 4/887 UD *test*
+  sentences share a 6-token sequence with SiPOS (38/4096 train, 2/773 dev).
+* Tag issues found (no fixes applied): punctuation tagged `SYM` (20,279); `SYM` also on
+  non-punctuation tokens such as `ئي` (1,944) and `پ` (78); `CONJ` (not split into
+  CCONJ/SCONJ); `SCON` (282); `FOW` (1,422, presumably foreign word) plus `FOW ` with a
+  trailing space (2) and one `"""`. Splitting at `. ۔ ؟ ? !` yields 6,397 pseudo-sentences
+  (mean 45.9 tokens, max 328) vs 6,784 in the paper.
