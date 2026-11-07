@@ -1,8 +1,16 @@
-"""XLM-R + character-CNN fusion POS tagger (combined plan, Phase 2-3). GPU script; UNTESTED.
+"""XLM-R + character-CNN fusion POS tagger (combined plan, Phase 2-3). GPU script.
 
-Written for a single Kaggle/Colab T4 (~16 GB). **It has not been run**: the development
-machine has no GPU and the `transformers` stack was not installed there. Only its syntax
-has been checked. Treat the first run as a debugging run.
+Written for a single Kaggle/Colab T4 (~16 GB). **Not yet run on a GPU or with the real
+XLM-R weights.** It has been smoke-tested end to end on CPU (2026-11-08, transformers
+5.22.2) with the real xlm-roberta-base tokenizer and a tiny random 2-layer encoder: all
+systems and budgets run, no skipped optimizer steps, and resume works. The fp16 GPU path
+is untested, so treat the first GPU run's smoke-test cell as a check.
+
+Fixes before the first GPU run: the character CNN runs only on real words and in fp32
+(masked max-pooling at -1e4 could overflow in fp16 and make the GradScaler skip every
+step); tiny budgets train for at least ``--min-steps`` optimizer steps, with patience
+counted only after that; finished runs are skipped on restart; each row records
+``lang``, ``steps``, ``epochs`` and ``skipped_steps``.
 
 Systems (word representation = XLM-R hidden state of the word's FIRST subword):
 
@@ -49,15 +57,26 @@ class CharCNN(nn.Module):
         self.proj = nn.Linear(3 * filters, dim)
 
     def forward(self, chars: torch.Tensor) -> torch.Tensor:
-        """(B, W, C) -> (B, W, dim)."""
+        """(B, W, C) -> (B, W, dim). Only real word slots are convolved (padding stays 0).
+
+        Runs in float32 even under autocast: max-pooling over masked positions must not
+        overflow in fp16 (that would make NaN gradients and the GradScaler skip every step).
+        """
         b, w, c = chars.shape
         flat = chars.view(b * w, c)
-        x = self.emb(flat).transpose(1, 2)
-        mask = (flat != 0).unsqueeze(1)
-        feats = [
-            torch.relu(conv(x))[:, :, :c].masked_fill(~mask, -1e4).max(dim=2).values for conv in self.convs
-        ]
-        return self.proj(torch.cat(feats, dim=1)).view(b, w, -1)
+        real = flat[:, 0] != 0
+        out = torch.zeros(b * w, self.proj.out_features, device=chars.device, dtype=torch.float32)
+        if bool(real.any()):
+            with torch.autocast(device_type=chars.device.type, enabled=False):
+                words = flat[real]
+                x = self.emb(words).float().transpose(1, 2)
+                mask = (words != 0).unsqueeze(1)
+                feats = [
+                    torch.relu(conv(x))[:, :, :c].masked_fill(~mask, 0.0).max(dim=2).values
+                    for conv in self.convs
+                ]
+                out[real] = self.proj(torch.cat(feats, dim=1))
+        return out.view(b, w, -1)
 
 
 class FusionTagger(nn.Module):
@@ -80,7 +99,7 @@ class FusionTagger(nn.Module):
         h = self.enc(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
         hw = torch.gather(h, 1, first_idx.unsqueeze(-1).expand(-1, -1, h.shape[-1]))
         if self.kind != "base":
-            hc = self.char(chars)
+            hc = self.char(chars).to(hw.dtype)
             z = self.fuse(torch.cat([hw, hc], dim=-1))
             hw = (
                 torch.tanh(z)
@@ -131,7 +150,7 @@ def run(args, kind, budget, seed, data, tok, device):  # type: ignore[no-untyped
         [{"params": enc_params, "lr": args.lr}, {"params": new_params, "lr": args.head_lr}]
     )
     loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
-    scaler = torch.cuda.amp.GradScaler(enabled=device.type == "cuda")
+    scaler = torch.amp.GradScaler(device.type, enabled=device.type == "cuda")
 
     def predict(sents):  # type: ignore[no-untyped-def]
         model.eval()
@@ -148,9 +167,13 @@ def run(args, kind, budget, seed, data, tok, device):  # type: ignore[no-untyped
         return out
 
     best, best_state, bad = -1.0, None, 0
-    steps_per_epoch = max(1, len(train) // args.batch)
+    steps_per_epoch = max(1, -(-len(train) // args.batch))
+    # Tiny budgets need many epochs to reach a minimum number of optimizer steps.
+    max_epochs = max(args.epochs, -(-args.min_steps // steps_per_epoch))
+    steps, skipped, epochs_run = 0, 0, 0
     t0 = time.time()
-    for _ep in range(args.epochs):
+    for _ep in range(max_epochs):
+        epochs_run += 1
         model.train()
         order = list(range(len(train)))
         random.shuffle(order)
@@ -163,9 +186,11 @@ def run(args, kind, budget, seed, data, tok, device):  # type: ignore[no-untyped
                 loss = loss_fn(logits.view(-1, logits.shape[-1]).float(), y.to(device).view(-1))
             scaler.scale(loss).backward()
             scaler.unscale_(opt)
-            nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            norm = nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            skipped += int(not torch.isfinite(norm))  # GradScaler skips non-finite steps
             scaler.step(opt)
             scaler.update()
+            steps += 1
         preds = predict(data["dev"])
         acc = sum(
             p == g
@@ -175,7 +200,7 @@ def run(args, kind, budget, seed, data, tok, device):  # type: ignore[no-untyped
         if acc > best + 1e-6:
             best, bad = acc, 0
             best_state = {k2: v.detach().cpu().clone() for k2, v in model.state_dict().items()}
-        else:
+        elif steps >= args.min_steps:  # patience only counts once the minimum is reached
             bad += 1
             if bad >= args.patience:
                 break
@@ -206,6 +231,8 @@ def run(args, kind, budget, seed, data, tok, device):  # type: ignore[no-untyped
         "acc_pert_confusable": acc_on(bits["test_confusable"], pert),
         "acc_pert_noise": acc_on(bits["test_randnoise"], pert),
         "seconds": round(time.time() - t0, 1), "steps_per_epoch": steps_per_epoch,
+        "steps": steps, "epochs": epochs_run, "skipped_steps": skipped, "lang": args.lang,
+        "n_unseen_lemma": sum(unseen), "n_perturbed": sum(pert),
     }  # fmt: skip
 
 
@@ -222,6 +249,8 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--head-lr", type=float, default=1e-3)
+    ap.add_argument("--min-steps", type=int, default=300, help="minimum optimizer steps per run")
+    ap.add_argument("--lang", default="sd", help="language tag recorded in each result row")
     ap.add_argument("--out", default="results.jsonl")
     a = ap.parse_args()
     from transformers import AutoTokenizer
@@ -234,9 +263,18 @@ def main() -> None:
     data["all_tags"] = json.loads((d / "stats.json").read_text(encoding="utf-8"))["upos_tags"]
     tok = AutoTokenizer.from_pretrained(a.model)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    done = set()
+    if Path(a.out).exists():  # resume: skip runs already in the output file
+        for line in Path(a.out).read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                r = json.loads(line)
+                done.add((r.get("lang", a.lang), r["kind"], r["budget"], r["seed"]))
+    print(f"device={device}; {len(done)} runs already done in {a.out}", flush=True)
     for budget in a.budgets:
         for seed in range(a.seeds):
             for kind in a.kinds:
+                if (a.lang, kind, budget, seed) in done:
+                    continue
                 row = run(a, kind, budget, seed, data, tok, device)
                 with open(a.out, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(row) + "\n")
