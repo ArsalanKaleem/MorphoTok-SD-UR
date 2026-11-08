@@ -26,3 +26,11 @@ Template for each amendment:
 - Run provenance: all test runs record commit `a259f86` with `prereg-v1` verified frozen.
   The Urdu runs are flagged `dirty: true` because untracked files of the new `sdnorm` tool
   existed during the run; no tracked file and no evaluation code had changed.
+
+## Amendment 2 — 2026-11-09 — tag prereg-v3
+- Section changed: `PREREG.md` new §9 (Gate 5 language-model study). Nothing else changed.
+- Old text: none (Gate 5 had controls only in `configs/eval/downstream.yaml`).
+- New text: §9 fixes the data, model recipe, metric, primary contrast and decision rule.
+- Reason: specify the downstream test before it is run on Kaggle.
+- Was any test-set result seen before this change? Tokenizer test results yes (Amendment 1);
+  **no language-model result of any kind** (none has been run).

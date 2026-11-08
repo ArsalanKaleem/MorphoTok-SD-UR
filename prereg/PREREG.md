@@ -97,3 +97,23 @@ integration tests and are never evidence for any hypothesis.
 ## 8. Deviations
 
 Recorded in `prereg/AMENDMENTS.md`.
+
+## 9. Gate 5 language-model study (added by Amendment 2, before any LM run)
+
+* **Question (H7):** does the preregistered intrinsic gain of `unigram_hard_trainonly` over
+  `unigram` transfer to language modelling?
+* **Data:** the same pilot splits and the same 3 × 2 trained tokenizers per language as §4
+  (plus `bpe`), exported by `scripts/14_export_lm_data.py`; LM trains on the train split,
+  early-stops on dev, is scored once on test.
+* **Model (fixed):** `scripts/lm_gate5.py` defaults: 4-layer pre-norm transformer, d = 256,
+  4 heads, context 256 tokens, dropout 0.1, AdamW lr 1e-3, batch 64, ≤ 6,000 steps, early
+  stopping on dev bpc (patience 4 × 250 steps after 1,500). LM seed = tokenizer seed.
+* **Primary metric:** test bits per character (bpc), with a fixed character count shared by
+  all tokenizers.
+* **Primary contrast:** `unigram_hard_trainonly − unigram` test bpc, per language and V.
+  **Transfer** = mean Δbpc < 0 with the 95% t-interval over 3 seeds excluding 0;
+  **harm** = mean Δbpc > 0 with the interval excluding 0; otherwise **no detectable effect**.
+* **Secondary:** the same contrast on words whose lemma is held out from tokenizer
+  supervision and on word forms unseen in LM training; `bpe − unigram`.
+* **Prediction recorded from H7:** no transfer expected (the bigram proxy was 0.2–0.6% worse).
+* Exploratory caveats fixed now: one small LM size, a 5,000-line corpus, Wikipedia only.
