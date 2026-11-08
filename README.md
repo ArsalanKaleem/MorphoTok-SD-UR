@@ -30,6 +30,16 @@ works, not to show that it does.
 >    [`docs/findings_human_review.md`](docs/findings_human_review.md). No Urdu review or second
 >    annotator is planned: Urdu results remain silver-only.
 >
+> 7. **Confirmatory test (preregistration frozen as `prereg-v1`, 2026-11-09):** train-only
+>    supervision beats plain Unigram on held-out test lemmas in **3 of 4** preregistered tests
+>    (Sindhi V = 2000: +0.030 F1; Sindhi V = 4000: +0.033; Urdu V = 4000: +0.012; Urdu V = 2000:
+>    +0.006, below the +0.010 threshold), at +1–3% tokens/word. Test gold is silver.
+>    [`results/final_test/decision.md`](results/final_test/decision.md).
+>
+> 8. **Tool: `sdnorm`**, a corpus-guided, native-validated Sindhi spelling normalizer.
+>    It restores 94% of yeh-substituted tokens on the UD Sindhi test and 0.4% of random
+>    edits. [`docs/sdnorm.md`](docs/sdnorm.md); extensions: [`docs/extensions.md`](docs/extensions.md).
+>
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation
 > uses silver data on dev splits only; the preregistration is not frozen. See

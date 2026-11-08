@@ -261,7 +261,9 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"\nsaved {summary_dir}; follow-up hypotheses appended to {out / 'followups.jsonl'}")
-    print("Decision thresholds for Gates 0/3 are UNRESOLVED until the pilot (prereg/decision_gates.md).")
+    print(
+        "Decision thresholds: prereg/PREREG.md section 4 and prereg/decision_gates.md (scripts/13_final_test_report.py)."
+    )
     return 0
 
 

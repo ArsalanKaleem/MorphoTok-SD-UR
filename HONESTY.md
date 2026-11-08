@@ -174,9 +174,13 @@ has not been screened for prior *empirical* work on Sindhi/Urdu.
 
 ## 8. Provenance and preregistration state
 
-The repository has been `git init`-ed with **no commits**, so every run record has
-`git.commit = null` with a warning. **The preregistration is not frozen**: no
-`prereg-v*` tag exists, and `make prereg-status` reports `frozen: False`.
+Pilot run records made before the first commit have `git.commit = null` with a warning.
+The preregistration was frozen on 2026-11-09 as tag **`prereg-v1`**, after the dev pilot and
+before any tokenizer test evaluation (`python scripts/prereg_freeze.py status` verifies it).
+The confirmatory test evaluation ran once on that commit; verdicts are in
+`results/final_test/decision.md`: **3 of 4 primary tests pass** (sd V2000, sd V4000, ur V4000);
+ur V2000 fails the +0.010 minimum gain (+0.006, CI excludes 0). The test gold is silver.
+POS results are exploratory (the UD test split was used during the pilot).
 
 **Review provenance (2026-11-08).** The first returned Sindhi review (all three sheets) was
 made by the collaborator **with an AI tool** (confirmed by the project owner). It is kept
@@ -207,5 +211,7 @@ replaces it; the AI pass is retained only to report AI-vs-native agreement.
 | `docs/findings_pilot.md` | pilot report |
 | `scripts/{make_review_sheets,ingest_review}.py`, `audit/REVIEWING.md`, `tests/test_review.py` | native-speaker review workflow |
 | `scripts/{10_human_gold_eval,11_confusable_approved}.py`, `results/human_gold/`, `docs/findings_human_review.md` | re-scoring against native-speaker labels (metric-only outputs) |
+| `scripts/13_final_test_report.py`, `results/final_test/` | preregistered verdicts for the one-time test evaluation |
+| `src/morphtok/tools/sdnorm.py`, `scripts/{sdnorm,12_sdnorm_eval}.py`, `tests/test_sdnorm.py`, `results/sdnorm/`, `docs/{sdnorm,extensions}.md` | Sindhi spelling normalizer built from the findings, its evaluation, and researched extensions |
 | `src/morphtok/models/`, `scripts/{build_pos_tasks,07_pos_tagging,08_pos_report,xlmr_fusion}.py`, `configs/data/*_postok.yaml`, `configs/run/pilot_postok.yaml`, `tests/test_{tagger,pos_tasks}.py`, `docs/combined_plan.md`, `requirements-models.lock` | combined-plan POS study (CPU taggers; untested GPU script) |
 | `tests/conftest.py`, `data/*/README.md`, `.gitignore`, `requirements*.lock` | test import path, documented empty directories, hygiene, pinned dependencies |
