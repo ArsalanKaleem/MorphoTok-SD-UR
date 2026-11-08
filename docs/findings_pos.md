@@ -1,11 +1,22 @@
 # POS study findings (combined plan), exploratory
 
-**Status (2026-11-05).** CPU-scale pilot: BiLSTM taggers trained from scratch, **not**
-XLM-R (`scripts/xlmr_fusion.py` is written but has not run). Official UD test sets, dev
-used only for early stopping. Paired, seed-matched deltas with 95% t-intervals over seeds
-(5 seeds at the 1% and 10% budgets, 3 at 100%). Full tables: `runs/SD-POS-report.md`,
-`runs/UR-POS-report.md` (`python scripts/08_pos_report.py --lang sd|ur`). The
-preregistration is not frozen; treat everything here as pilot evidence.
+**Status (2026-11-08).** Two model families on the official UD test sets (dev used only for
+early stopping), with paired, seed-matched deltas and 95% t-intervals over seeds:
+
+1. **CPU pilot:** BiLSTM taggers trained from scratch (5 seeds at 1% and 10%, 3 at 100%).
+   Tables: `runs/SD-POS-report.md`, `runs/UR-POS-report.md` (`scripts/08_pos_report.py`).
+2. **XLM-R base** fine-tuned on a Kaggle T4, with and without character fusion (3 seeds).
+   Tables: `results/xlmr_kaggle/report_{sd,ur}.md` (`scripts/09_xlmr_report.py`). See the
+   section **"With a pretrained encoder (XLM-R)"**, which revises the CPU interpretation.
+
+The preregistration is not frozen; treat everything here as pilot evidence.
+
+## Headline (both model families, both languages)
+
+**Character information buys robustness to spelling perturbation in every setting. It
+improves generalization to unseen lemmas only for models trained from scratch; with a
+pretrained encoder (XLM-R) it gives no gain there, and at the 1% budget it costs accuracy.**
+Aggregate accuracy hides both effects.
 
 ## Question
 
@@ -114,7 +125,61 @@ the 100% robustness CIs mostly include 0.
 | Best unseen-lemma system at full budget | `gated:unigram_hard_trainonly` | `gated:unigram_hard_trainonly` |
 | Overall accuracy separates the systems | barely (≤1.4 points) | barely (≤1.2 points) |
 
-## Interpretation (Sindhi; Urdu where stated, provisional)
+## With a pretrained encoder (XLM-R base; Kaggle T4; 3 seeds)
+
+Same task files, same diagnostic test sets. `base` = XLM-R fine-tuning; `concat` / `gated` =
+XLM-R first-subword states fused with a character CNN (parameter-matched).
+
+### Absolute accuracy (mean over seeds)
+
+| | Budget | XLM-R `base` all / unseen lemma | Best CPU value per column (any system) all / unseen lemma |
+|---|---|---|---|
+| Sindhi | 1% | **0.882 / 0.789** | 0.726 / 0.539 |
+| Sindhi | 100% | **0.941 / 0.769** | 0.923 / 0.646 |
+| Urdu | 1% | **0.892 / 0.818** | 0.705 / 0.522 |
+| Urdu | 100% | **0.946 / 0.871** | 0.929 / 0.727 |
+
+Pretraining dominates: XLM-R alone beats every CPU system at every budget, by far the most
+at 1%. (The two families are not a controlled comparison: different models and training.)
+Unseen-lemma token counts differ by budget: 4,748 (1%) to 795 (100%) in Sindhi.
+
+### Paired effect of character fusion (`gated` − `base`; mean [95% t-CI], n = 3)
+
+| | Budget | Δ unseen lemma | Δ confusable spelling | Δ random-letter noise |
+|---|---|---|---|---|
+| Sindhi | 1% | **−0.041 [−0.050, −0.031]** | **+0.107 [+0.024, +0.190]** | +0.063 [−0.045, +0.170] |
+| Sindhi | 10% | −0.007 [−0.030, +0.016] | +0.059 [−0.026, +0.144] | +0.033 [−0.012, +0.078] |
+| Sindhi | 100% | +0.003 [−0.018, +0.023] | +0.048 [−0.043, +0.138] | +0.033 [−0.003, +0.068] |
+| Urdu | 1% | −0.008 [−0.022, +0.005] | **+0.029 [+0.013, +0.045]** | **+0.042 [+0.020, +0.064]** |
+| Urdu | 10% | +0.003 [−0.006, +0.012] | +0.002 [−0.047, +0.051] | +0.018 [−0.036, +0.071] |
+| Urdu | 100% | −0.003 [−0.047, +0.040] | +0.022 [−0.015, +0.058] | **+0.058 [+0.017, +0.098]** |
+
+`concat` − `base` shows the same pattern with tighter intervals for robustness: Sindhi
+confusable +0.077 [+0.017, +0.137] (1%), +0.055 [+0.023, +0.088] (10%), +0.050 [+0.010,
++0.091] (100%); Urdu noise +0.034 [+0.026, +0.042] (10%), +0.023 [+0.014, +0.032] (100%).
+`concat` also lowers unseen-lemma accuracy at 1% (Sindhi −0.034, Urdu −0.019; CIs exclude 0).
+
+**Gate vs concat:** no robustness difference. Small unseen-lemma edge for the gate in two
+cells (Sindhi 10%: +0.013 [+0.002, +0.025]; Urdu 1%: +0.011 [+0.008, +0.014]).
+
+### What this changes
+
+* **C1 (character fusion improves unseen-lemma accuracy):** holds for from-scratch taggers
+  and **fails for XLM-R**: no gain at 10% or 100%, and a loss at 1% (Sindhi significant).
+  A pretrained subword encoder already generalizes well to unseen lemmas (0.77–0.87), and
+  adding a randomly initialized character branch with very little labelled data appears to
+  dilute it.
+* **C2 (character input buys spelling robustness):** holds for **both** model families and
+  both languages, smaller with XLM-R (confusable gains +0.02 to +0.11 vs +0.2 to +0.4 for the
+  CPU taggers).
+* **C4 (gate > concat):** not supported for XLM-R beyond two small unseen-lemma cells.
+* XLM-R `base` itself is far less hurt by the *confusable* substitution than by random
+  letters (Sindhi drop 0.29 vs 0.41; Urdu 0.14 vs 0.35), consistent with pretraining having
+  seen both yeh variants. That supports treating the substitution as a realistic variant;
+  native approval (review Task 3) is still pending.
+* The tokenizer-level comparison (C5) was not run with XLM-R, whose tokenizer is fixed.
+
+## Interpretation of the CPU pilot (Sindhi; Urdu where stated; revised by the XLM-R section)
 
 1. **Morphological generalization and spelling robustness come from different places.**
    Character input does most for robustness, and the gain is largest with little data.

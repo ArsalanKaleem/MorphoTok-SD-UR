@@ -19,8 +19,9 @@ works, not to show that it does.
 >    spelling perturbation in both languages, and gated character fusion with the
 >    morph-supervised tokenizer gives the best accuracy on unseen lemmas. In Sindhi the
 >    tokenizer's morphology adds a significant gain *inside* fusion at every budget; in Urdu
->    the gain points the same way but is not significant. See
->    [`docs/findings_pos.md`](docs/findings_pos.md); the XLM-R version has not run yet.
+>    the gain points the same way but is not significant. **With XLM-R (Kaggle T4) the
+>    unseen-lemma benefit disappears (and reverses at 1%), while the spelling-robustness
+>    benefit remains.** See [`docs/findings_pos.md`](docs/findings_pos.md).
 >
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation

@@ -87,8 +87,9 @@ frequency. These are properties of the generator and the code, not of either lan
   1% / 10% / 100% training budgets, 5 seeds (low budgets) or 3 seeds (full). These are
   **small models trained from scratch, not XLM-R.** Their numbers say nothing about how a
   pretrained transformer would behave.
-* **Not run at all:** `scripts/xlmr_fusion.py` (XLM-R + character fusion). It was written
-  for a T4 and syntax-checked only: this machine has no GPU, and `transformers` is not installed.
+* **XLM-R run (2026-11-08):** `scripts/xlmr_fusion.py` ran on a Kaggle T4 for both languages
+  (54 runs; provenance in `results/xlmr_kaggle/README.md`). Three seeds only, a single
+  pretrained model (xlm-roberta-base), fp16. This was not repeated locally (no GPU here).
 * **The spelling-perturbation test is a hypothesis.** `test_confusable` substitutes Arabic
   yeh → Farsi yeh (Sindhi) and Farsi yeh → Arabic yeh plus keheh → Arabic kaf (Urdu).
   Whether these are real-world equivalent spellings is exactly what the native review
