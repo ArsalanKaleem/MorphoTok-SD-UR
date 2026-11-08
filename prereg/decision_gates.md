@@ -1,22 +1,27 @@
 # Decision gates 0–5
 
-Every threshold below is **UNRESOLVED** until the pilot provides variance estimates. The
-pilot itself is exploratory and is logged in `runs/ledger.jsonl`. Synthetic results never
-pass or fail a gate.
+Thresholds were set on 2026-11-09 **after** the dev pilot, with the dev results known (see
+`PREREG.md`). Where a gate was already evaluated on dev, its outcome is recorded as *Pilot
+outcome*. Synthetic results never pass or fail a gate.
+
+**Scope decision (2026-11-09):** no Urdu native review and no second annotator are planned.
+Gates that require ≥ 2 annotators are evaluated descriptively, for Sindhi only, and cannot
+be passed.
 
 Outcomes per gate: **continue** · **revise** · **abandon/pivot**.
 
 ## Gate 0 — Baselines and normalization (`make gate0`, registry A1)
 
-* **Minimum data quality:** real corpus with verified licence; ≥ UNRESOLVED words; Unicode
+* **Minimum data quality:** real corpus with verified licence; ≥ 50,000 words; Unicode
   form fixed (NFC unless the audit shows NFC changes text); duplicate-aware splits.
 * **Metrics:** fertility, tokens/char, mean token length, boundary F1 (if gold exists).
 * **Analysis:** BPE, Unigram, char × {preserve, remove, boundary_marker} at matched
   vocabulary sizes, ≥3 seeds; paired bootstrap of each policy vs preserve; normalization
   share from `04_intrinsic_eval.py`.
 * **Continue:** morphology-aware variants differ from `unigram_zwnj_norm` beyond the
-  normalization effect (share < UNRESOLVED).
-* **Revise:** normalization share ≥ UNRESOLVED → **remove the ZWNJ-loss claim**; compare
+  normalization effect (share < 0.5).
+* *Pilot outcome:* ZWNJ policies change fertility by ≤ 0.1%; share ≈ 0 → **continue**.
+* **Revise:** normalization share ≥ 0.5 → **remove the ZWNJ-loss claim**; compare
   methods only within one policy.
 * **Abandon:** — (Gate 0 alone cannot abandon the project).
 * Known artefact: `boundary_marker` forces a boundary at every ZWNJ, so any ZWNJ that
@@ -24,21 +29,26 @@ Outcomes per gate: **continue** · **revise** · **abandon/pivot**.
 
 ## Gate 1 — ZWNJ audit (`make gate1`, registry A2)
 
-* **Minimum data quality:** ≥ UNRESOLVED adjudicated occurrences; ≥ 2 annotators on ≥
-  UNRESOLVED % of items; κ ≥ UNRESOLVED.
+* **Minimum data quality:** ≥ 100 adjudicated occurrences; ≥ 2 annotators on ≥ 20% of
+  items; κ ≥ 0.6.
+* *Pilot outcome (sd):* 109 occurrences, **1 annotator** → minimum data quality **not met**;
+  reported descriptively (MORPH 13/17, Wilson (0.53, 0.90)). ur: no annotation.
 * **Metrics:** MORPH rate with Wilson 95% CI (AMBIG in the denominator, ERROR excluded);
   per-stratum rates; Cohen/Fleiss κ.
-* **Continue (ZWNJ as morphological signal):** CI lower bound ≥ UNRESOLVED.
+* **Continue (ZWNJ as morphological signal):** CI lower bound ≥ 0.5.
 * **Revise (ZWNJ as orthographic/robustness variable only):** CI upper bound <
-  UNRESOLVED → Objective D only, never ZWNJ-as-morphology supervision.
+  0.5 → Objective D only, never ZWNJ-as-morphology supervision.
 * **Abandon ZWNJ-morphology claims:** as in Revise.
 
 ## Gate 2 — Analyzer coverage (`make gate2`, registry C1)
 
-* **Minimum data quality:** manually reviewed dev gold of ≥ UNRESOLVED types; analyzer
+* **Minimum data quality:** manually reviewed dev gold of ≥ 200 types; analyzer
   version and licence recorded.
 * **Metrics:** type and token coverage; boundary P/R/F1 on covered dev gold types; ECE.
-* **Continue:** coverage ≥ UNRESOLVED and precision ≥ UNRESOLVED.
+* **Continue:** token coverage ≥ 0.20 and boundary precision ≥ 0.70 on reviewed dev gold.
+* *Pilot outcome (sd):* token coverage 0.27, precision **0.55** on 267 native-reviewed words
+  → **revise** (low precision): supervision is used only during training and the silver-gold
+  caveat is reported. ur: precision unmeasured.
 * **Revise:** low precision → high-confidence-only supervision / calibration (C2); low
   coverage → coverage-reduction curve to estimate what is needed.
 * **Pivot:** no usable analyzer → uncertainty-aware supervision, robustness evaluation, or
@@ -51,10 +61,12 @@ Outcomes per gate: **continue** · **revise** · **abandon/pivot**.
   vocabulary verified in every record.
 * **Metrics:** primary F1 contrasts with bootstrap CIs and t-CIs over seeds; λ curve;
   perturbation slope; random-boundary control; frequency strata.
-* **Continue with soft prior:** soft − hard > UNRESOLVED with CI over seeds excluding 0 on
+* **Continue with soft prior:** soft − hard > +0.005 with CI over seeds excluding 0 on
   dev, then confirmed once on test after the freeze.
 * **Revise (simplify):** hard ≥ soft, or the λ curve rises monotonically to the hard limit
   → **keep hard constraints, remove the soft prior**.
+* *Pilot outcome:* hard ≥ soft in both languages and both V; the λ curve rises to the hard
+  limit → **revise**: the primary contrast is `unigram_hard_trainonly − unigram` (`PREREG.md` §4).
 * **Abandon method claim:** neither beats `unigram_zwnj_norm`, or the random-boundary
   control recovers most of the gain.
 

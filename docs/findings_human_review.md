@@ -98,7 +98,8 @@ tokens removed, 4,280 kept) from the stored per-token results, no retraining:
 
 ## 5. What remains
 
-1. Urdu: all three review tasks (needs a native Urdu reviewer working without AI tools).
-2. A second Sindhi annotator for 50–100 boundary words and the ZWNJ sheet, to report κ.
-3. More human boundary words, for power at V = 2000 and on more lemmas.
-4. Optional Kaggle rerun saving per-token bits, to re-score XLM-R with approved substitutions.
+**Scope decision (2026-11-09):** no Urdu review and no second annotator are planned. Urdu
+results stay silver-only; Sindhi results rest on one annotator and report no κ.
+
+1. More human boundary words, for power at V = 2000 and on more lemmas (optional).
+2. Optional Kaggle rerun saving per-token bits, to re-score XLM-R with approved substitutions.

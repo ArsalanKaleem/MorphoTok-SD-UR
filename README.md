@@ -27,7 +27,8 @@ works, not to show that it does.
 >    Against human gold, result 2 holds at V = 4000 (+0.022 F1, CI excludes 0) but not at
 >    V = 2000. Where ZWNJ does occur inside Sindhi text it mostly marks compound and ال-name
 >    joins. The spelling-robustness result holds on native-approved substitutions. See
->    [`docs/findings_human_review.md`](docs/findings_human_review.md). Urdu is not yet reviewed.
+>    [`docs/findings_human_review.md`](docs/findings_human_review.md). No Urdu review or second
+>    annotator is planned: Urdu results remain silver-only.
 >
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation

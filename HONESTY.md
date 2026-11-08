@@ -50,7 +50,10 @@ Summarised in `docs/findings_pilot.md`, with run IDs. In short:
   human gold the train-only gain holds at V = 4000 (+0.022 F1, CI excludes 0) but not at
   V = 2000 (+0.001). Real Sindhi-internal ZWNJ is mostly at compound or ال-name joins
   (13/17, pass 2), which contradicts H2 as written. ي→ی was approved as a spelling variant,
-  and the spelling-robustness result holds on approved substitutions. Urdu: no review yet.
+  and the spelling-robustness result holds on approved substitutions. **Scope decision
+  (2026-11-09): no Urdu native review and no second annotator are planned.** Urdu results
+  stay silver-only and the Urdu spelling substitutions stay unapproved; Sindhi results rest
+  on one annotator, so no agreement (κ) is reported.
 
 ## 2. Implemented and unit-tested (hand-computed or exhaustive oracles)
 
