@@ -10,11 +10,13 @@ Planned since the pilot (`findings_pilot.md` §9 step 3; `combined_plan.md` phas
 open: H7 has only a token-bigram proxy, which was 0.2–0.6% *worse* for the supervised
 tokenizer. The real test is a small neural language model.
 
-**Design.** Kaggle T4; a ~10–20M-parameter transformer LM trained from scratch on Sindhi
-Wikipedia with each tokenizer (`unigram`, `unigram_hard_trainonly`, `bpe`, ± sdnorm
-preprocessing), equal **character** budget per batch, 3 seeds; metric bits per character on
-held-out text (comparable across tokenizers), plus bits/char on words of unseen lemmas.
-About 1–2 GPU-hours per language.
+**Design (as built).** Kaggle T4; a ~4M-parameter, 4-layer transformer LM trained from
+scratch on the 5,000-line Wikipedia pilot of each language with each tokenizer (`unigram`,
+`unigram_hard_trainonly`, `bpe`) at V = 2000 and 4000, 3 seeds, the same token-window recipe
+and early stopping on dev; metric bits per character on held-out text (comparable across
+tokenizers), plus bits/char on words of held-out lemmas. sdnorm preprocessing is not part of
+this study (the tokenizers were trained on unnormalized text). Roughly 1 GPU-hour per language
+(estimate).
 
 **Why it is worth doing.** Recent work disagrees on whether morphological alignment
 transfers to language modelling:
