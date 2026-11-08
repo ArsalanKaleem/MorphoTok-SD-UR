@@ -45,6 +45,12 @@ Summarised in `docs/findings_pilot.md`, with run IDs. In short:
   helps compounds, because plain Unigram already recovers 91–93% of them.
 * The method is posterior regularization with a fixed dual: **no algorithmic novelty**
   (`docs/novelty_screening.md`).
+* **Native-speaker review (Sindhi only, one annotator; `docs/findings_human_review.md`).**
+  The silver labels are noisy (P 0.55, R 0.48 vs human gold on 267 dev words). Against
+  human gold the train-only gain holds at V = 4000 (+0.022 F1, CI excludes 0) but not at
+  V = 2000 (+0.001). Real Sindhi-internal ZWNJ is mostly at compound or ال-name joins
+  (13/17, pass 2), which contradicts H2 as written. ي→ی was approved as a spelling variant,
+  and the spelling-robustness result holds on approved substitutions. Urdu: no review yet.
 
 ## 2. Implemented and unit-tested (hand-computed or exhaustive oracles)
 
@@ -123,8 +129,8 @@ frequency. These are properties of the generator and the code, not of either lan
 
 ## 5. Claims
 
-H1, H2, H4, H5 and H6 have **pilot-only** evidence; H3 and H7 are untested or have only
-a proxy (`prereg/claim_ledger.md`). Novelty: **no algorithmic novelty is claimed**.
+H1, H4, H5 and H6 have **pilot-only** evidence; H2 and H3 are **contradicted for Sindhi**
+by native review; H7 has only a proxy (`prereg/claim_ledger.md`). Novelty: **no algorithmic novelty is claimed**.
 Objective A was screened and is posterior regularization with a fixed dual; Objective B
 is morphological pre-segmentation. Any contribution is empirical or resource-level and
 has not been screened for prior *empirical* work on Sindhi/Urdu.
@@ -169,6 +175,12 @@ The repository has been `git init`-ed with **no commits**, so every run record h
 `git.commit = null` with a warning. **The preregistration is not frozen**: no
 `prereg-v*` tag exists, and `make prereg-status` reports `frozen: False`.
 
+**Review provenance (2026-11-08).** The first returned Sindhi review (all three sheets) was
+made by the collaborator **with an AI tool** (confirmed by the project owner). It is kept
+apart (`data/audit/review/ai_assisted_2026-11-08/`, git-ignored), is **not** used as human
+gold, and changes no claim status. A blind recheck by a native speaker (the project owner)
+replaces it; the AI pass is retained only to report AI-vs-native agreement.
+
 ## 9. Files added beyond the required tree (and why)
 
 | File | Reason |
@@ -191,5 +203,6 @@ The repository has been `git init`-ed with **no commits**, so every run record h
 | `configs/data/{sindhi,urdu}_{web,web_audit,randctrl,20k}.yaml`, `configs/data/urdu_zia*.yaml`, `configs/tokenizer/*_trainonly.yaml`, `configs/eval/intrinsic_silver.yaml`, `configs/run/pilot_{zia,ctrl,scale}.yaml` | domain, negative-control, scale and train-only conditions |
 | `docs/findings_pilot.md` | pilot report |
 | `scripts/{make_review_sheets,ingest_review}.py`, `audit/REVIEWING.md`, `tests/test_review.py` | native-speaker review workflow |
+| `scripts/{10_human_gold_eval,11_confusable_approved}.py`, `results/human_gold/`, `docs/findings_human_review.md` | re-scoring against native-speaker labels (metric-only outputs) |
 | `src/morphtok/models/`, `scripts/{build_pos_tasks,07_pos_tagging,08_pos_report,xlmr_fusion}.py`, `configs/data/*_postok.yaml`, `configs/run/pilot_postok.yaml`, `tests/test_{tagger,pos_tasks}.py`, `docs/combined_plan.md`, `requirements-models.lock` | combined-plan POS study (CPU taggers; untested GPU script) |
 | `tests/conftest.py`, `data/*/README.md`, `.gitignore`, `requirements*.lock` | test import path, documented empty directories, hygiene, pinned dependencies |

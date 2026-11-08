@@ -23,6 +23,12 @@ works, not to show that it does.
 >    unseen-lemma benefit disappears (and reverses at 1%), while the spelling-robustness
 >    benefit remains.** See [`docs/findings_pos.md`](docs/findings_pos.md).
 >
+> 6. **Native-speaker review (Sindhi, 2026-11-09):** silver labels are only ≈55% precise.
+>    Against human gold, result 2 holds at V = 4000 (+0.022 F1, CI excludes 0) but not at
+>    V = 2000. Where ZWNJ does occur inside Sindhi text it mostly marks compound and ال-name
+>    joins. The spelling-robustness result holds on native-approved substitutions. See
+>    [`docs/findings_human_review.md`](docs/findings_human_review.md). Urdu is not yet reviewed.
+>
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation
 > uses silver data on dev splits only; the preregistration is not frozen. See

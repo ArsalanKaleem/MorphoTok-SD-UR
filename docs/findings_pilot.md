@@ -56,6 +56,10 @@ equivalences needs native-speaker approval (the `selective` policy).
 
 ## 3. Silver supervision during training only improves segmentation of unseen lemmas
 
+> **Update 2026-11-09 (Sindhi):** against native-speaker gold (267 dev words) this gain holds
+> at V = 4000 (+0.022 [+0.002, +0.043]) but not at V = 2000 (+0.001), and the silver labels
+> used below are only ≈55% precise. See `docs/findings_human_review.md` §2.
+
 Set-up: supervision = boundaries derived from manually annotated (form, lemma) pairs
 (UD Sindhi-Isra; UD Urdu-UDTB + UniMorph) for **train-split lemmas only**. Evaluation on
 **dev-split lemmas the supervision never covered** (Sindhi 961 types, Urdu 1,618).

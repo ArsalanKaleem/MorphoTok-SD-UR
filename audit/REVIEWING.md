@@ -51,10 +51,10 @@ Fill `label` with exactly one of:
 
 | Label | Use when |
 |---|---|
-| `MORPH` | the ZWNJ sits at a morpheme boundary (e.g. between compound members, or stem and affix) |
-| `ORTHO` | it is only there for spelling or shaping, not at a morpheme boundary |
+| `MORPH` | the ZWNJ sits at a morpheme boundary (e.g. between compound members such as اسلام‌آباد, between a name and an Arabic ال-word such as شمس‌الدين, or stem and affix) |
+| `ORTHO` | it is *inside* a word and changes how two letters join, but is not at a morpheme boundary. A ZWNJ at the end of a word, before a space or punctuation, has no shaping effect: use `ERROR` |
 | `AMBIG` | you cannot decide |
-| `ERROR` | it looks like a typing or encoding mistake |
+| `ERROR` | it looks like a typing or encoding mistake, including a ZWNJ next to a space, punctuation or a non-joining sign such as ۾ ۽, and a ZWNJ used in place of a space between ordinary words |
 | `FOREIGN` | the text around it is not Sindhi/Urdu (e.g. Persian or Arabic quoted inside an article) |
 
 Put your initials in `annotator` (or leave it empty, which counts as `A1`). Use `note`
