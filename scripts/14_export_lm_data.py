@@ -14,12 +14,20 @@ supervision (silver entry in the dev/test lemma split), and whether its form occ
 LM training lines, for stratified bpc.
 
     python scripts/14_export_lm_data.py --config configs/run/pilot_wiki.yaml --data sindhi
+
+Full-corpus study (PREREG.md §11): ``--max-lines train=150000,dev=5000,test=20000`` keeps a
+seeded random subset of lines per split (in corpus order); splits with fewer lines are kept
+whole.
+
+    python scripts/14_export_lm_data.py --config configs/run/scale_full.yaml --data urdu_full
+        --dest data/tasks/lm_full --max-lines train=150000,dev=5000,test=20000
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -38,6 +46,16 @@ PAD, BOS, EOS, SEP = 0, 1, 2, 3
 
 def _args(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--dest", default="data/tasks/lm")
+    ap.add_argument("--max-lines", dest="max_lines", default="", help="e.g. train=150000,dev=5000")
+    ap.add_argument("--sample-seed", dest="sample_seed", type=int, default=13)
+
+
+def cap_lines(lines: list[str], k: int | None, seed: int) -> list[str]:
+    """A seeded random subset of ``k`` lines in their original order (all lines if fewer)."""
+    if k is None or len(lines) <= k:
+        return list(lines)
+    keep = sorted(random.Random(seed).sample(range(len(lines)), k))
+    return [lines[i] for i in keep]
 
 
 def main() -> int:
@@ -49,11 +67,14 @@ def main() -> int:
     dest.mkdir(parents=True, exist_ok=True)
     gold = load_gold(ds.cfg)
     heldout = {w for w, g in gold.items() if g.split in ("dev", "test")}
-    splits = {k: ds.splits[k] for k in ("train", "dev", "test")}
+    caps = {k: int(v) for k, v in (x.split("=") for x in args.max_lines.split(",") if x)}
+    splits = {k: cap_lines(ds.splits[k], caps.get(k), args.sample_seed) for k in ("train", "dev", "test")}
     train_forms = {strip_format(w)[0] for ln in splits["train"] for w in split_words(ln)}
     manifest = json.loads((out / exp_id("models", ds) / "manifest.json").read_text(encoding="utf-8"))
     analyzer = build_analyzer(ds)
-    meta: dict = {"lang": lang, "lines": {k: len(v) for k, v in splits.items()}, "files": []}
+    meta: dict = {"lang": lang, "lines": {k: len(v) for k, v in splits.items()},
+                  "corpus_lines": {k: len(ds.splits[k]) for k in splits}, "max_lines": caps,
+                  "sample_seed": args.sample_seed, "files": []}  # fmt: skip
     for m in manifest:
         name, vocab, seed = m["tokenizer"], int(m["vocab"]), int(m["seed"])
         if name not in TOKENIZERS:

@@ -69,3 +69,13 @@ Template for each amendment:
 - Run provenance: models in `runs/{SD-sindhi,UR-urdu}_full-models/` (git-ignored), trained
   from commit `9209724` (`prereg-v4`); evaluation `scripts/16_scale_eval.py` (commit
   `0ca29a0`).
+
+## Amendment 6 — 2026-11-09 — tag prereg-v7
+- Section changed: `PREREG.md` new §11 (full-corpus language-model study). Nothing else changed.
+- Old text: none.
+- New text: §11 fixes the tokenizers, data caps, model recipe, metric, decision rule and
+  prediction.
+- Reason: the §9 LMs were data-limited, which leaves H7 open to the objection that the
+  pilot LM could not use better segmentation.
+- Was any test-set result seen before this change? §9 LM results yes (Amendment 4) and
+  full-corpus tokenizer results yes (Amendment 5); **no full-corpus LM result of any kind**.

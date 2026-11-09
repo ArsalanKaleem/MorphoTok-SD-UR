@@ -137,3 +137,26 @@ Recorded in `prereg/AMENDMENTS.md`.
   lines per language; boundary metrics use every gold type.
 * **Prediction:** the gain replicates at every V in Sindhi; in Urdu it is smaller (pilot:
   +0.006 at V = 2000, +0.012 at V = 4000).
+
+## 11. Full-corpus language-model study (added by Amendment 6, before any run)
+
+* **Question (H7 at scale):** the pilot LMs of §9 were data-limited (best dev bpc at
+  ≈1,200 steps, then overfitting). Does the tokenizer gain transfer to language modelling
+  when the LM has enough text?
+* **Tokenizers:** the full-corpus models of §10 (`unigram`, `unigram_hard_trainonly`;
+  V ∈ {4000, 8000, 16000}; seeds 0, 1, 2), 18 per language.
+* **Data:** the §10 splits, exported by `scripts/14_export_lm_data.py --max-lines
+  train=150000,dev=5000,test=20000 --sample-seed 13`. A split with fewer lines is used
+  whole (Sindhi train 53,036 and test 6,573 lines); Urdu train, dev and test, and Sindhi
+  dev, are seeded random subsets in corpus order. The caps are cost-driven and fixed now:
+  every LM trains on ≥ 10× the pilot text, dev is used only for early stopping.
+* **Model and recipe:** unchanged from §9 (`scripts/lm_gate5.py` defaults, LM seed =
+  tokenizer seed). Only the data changes.
+* **Primary metric, contrast and decision rule:** as §9 (test bpc;
+  `unigram_hard_trainonly − unigram` per language and V; transfer / harm / no detectable
+  effect by the 95% t-interval over 3 seeds).
+* **Secondary:** held-out-lemma words, word forms unseen in LM training, seen forms; a
+  check that the runs are no longer data-limited (best dev step reported).
+* **Prediction:** no transfer on all test text (as §9). If any benefit appears it should
+  show first on held-out-lemma words.
+* **Caveats fixed now:** one small LM size, Wikipedia only, silver-defined held-out lemmas.
