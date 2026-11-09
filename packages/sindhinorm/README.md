@@ -17,6 +17,8 @@ native Sindhi speaker judged to be different words.
 pip install sindhinorm
 ```
 
+Try it without installing: [sindhinorm Playground](https://arsalankaleem.github.io/MorphoTok-SD-UR/).
+
 ```python
 from sindhinorm import normalize, explain
 

@@ -1,8 +1,11 @@
 """Build the single-file browser playground: template + sindhinorm.js + bundled lexicon.
 
     python packages/sindhinorm/playground/build_playground.py OUT.html
+    python packages/sindhinorm/playground/build_playground.py site/index.html --standalone
 
-The JS port is checked against the Python package by ``parity_test.mjs``.
+``--standalone`` wraps the page in a full HTML document (doctype, viewport, ``lang``) for
+static hosting such as GitHub Pages; without it the output is the fragment published as a
+claude.ai artifact. The JS port is checked against the Python package by ``parity_test.mjs``.
 """
 
 from __future__ import annotations
@@ -29,7 +32,24 @@ def main() -> int:
                        ('"__EXAMPLE__"', json.dumps(EXAMPLE, ensure_ascii=False))):  # fmt: skip
         assert page.count(key) == 1, key
         page = page.replace(key, value)
+    if "--standalone" in sys.argv[2:]:
+        head, sep, body = page.partition("</style>")
+        assert sep, "template must contain one <style> block"
+        head = head.replace('<meta charset="utf-8">\n', "", 1)
+        page = (
+            '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+            '<meta name="description" content="Try sindhinorm, a spelling normalizer for Sindhi text '
+            'typed on mixed keyboards, in your browser.">\n'
+            + head
+            + "body { margin: 0; }\n"
+            + sep
+            + "\n</head>\n<body>\n"
+            + body.lstrip("\n")
+            + "</body>\n</html>\n"
+        )
     out = Path(sys.argv[1])
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")
     print(f"{out}: {out.stat().st_size / 1e3:.0f} kB")
     return 0

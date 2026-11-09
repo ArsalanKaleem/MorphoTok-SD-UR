@@ -1,0 +1,56 @@
+# Build the sindhinorm browser playground and publish it on GitHub Pages.
+# The page is deployed only if the JavaScript port matches the Python package on every
+# lexicon word and keyboard variant (parity_test.mjs).
+name: Playground
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/sindhinorm/**"
+      - ".github/workflows/playground.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install sindhinorm from this commit
+        run: python -m pip install ./packages/sindhinorm
+      - name: Check JavaScript port against Python
+        run: |
+          python packages/sindhinorm/playground/make_parity_cases.py "$RUNNER_TEMP/parity.json"
+          node packages/sindhinorm/playground/parity_test.mjs "$RUNNER_TEMP/parity.json" \
+            packages/sindhinorm/src/sindhinorm/data/sd_lexicon.json.gz
+      - name: Build page
+        run: python packages/sindhinorm/playground/build_playground.py _site/index.html --standalone
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

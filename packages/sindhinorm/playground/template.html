@@ -111,7 +111,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
 <div class="wrap">
   <header>
     <h1>sindhinorm Playground <span class="sd" lang="sd">سنڌي</span></h1>
-    <p class="lede">Paste Sindhi text typed on any keyboard. Look-alike letters from Urdu, Persian and Arabic layouts (ی for ي, ہ or ھ for ه, ک or ك for ڪ) are fixed word by word, using how often each spelling appears in Sindhi Wikipedia. Pairs a native speaker judged to be different words are never merged.</p>
+    <p class="lede">Paste Sindhi text typed on any keyboard. Look-alike letters from Urdu, Persian and Arabic layouts (<bdi lang="sd">ی</bdi> for <bdi lang="sd">ي</bdi>, <bdi lang="sd">ہ</bdi> or <bdi lang="sd">ھ</bdi> for <bdi lang="sd">ه</bdi>, <bdi lang="sd">ک</bdi> or <bdi lang="sd">ك</bdi> for <bdi lang="sd">ڪ</bdi>) are fixed word by word, using how often each spelling appears in Sindhi Wikipedia. Pairs a native speaker judged to be different words are never merged.</p>
   </header>
 
   <div id="loadError" class="error" hidden></div>
@@ -174,13 +174,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <li>Candidates: every combination of look-alike letters at the word's yeh {ي ی ى ے}, heh {ه ھ ہ} and kaf {ڪ ک ك} positions. The most frequent allowed candidate wins.</li>
       <li>Encoding-only differences (ي/ی/ى, ه/ھ/ہ) merge whenever the candidate is more frequent.</li>
       <li>Differences involving ک, ڪ, ك or ے can change the word, so they merge only when the rare form is seen at most 100 times and the candidate at least 50× more often.</li>
-      <li>Words not in the lexicon only get the safest folds: ی ى → ي and ہ → ه.</li>
+      <li>Words not in the lexicon only get the safest folds: <bdi lang="sd">ی</bdi> <bdi lang="sd">ى</bdi> → <bdi lang="sd">ي</bdi> and <bdi lang="sd">ہ</bdi> → <bdi lang="sd">ه</bdi>.</li>
     </ol>
     <p class="note">Defaults were fixed before evaluation: on Urdu-keyboard text (ي typed as ی) 94.0% of altered words are restored, and 1.35% of clean words change.</p>
   </details>
 
   <footer>
-    <span>Same rules and output as the <code>sindhinorm</code> Python package (MIT), from the <a href="https://github.com/ArsalanKaleem/MorphoTok-SD-UR" target="_blank" rel="noopener">MorphoTok-SD-UR</a> project. Everything runs in your browser; nothing you type is sent anywhere.</span>
+    <span>Same rules and output as the <a href="https://pypi.org/project/sindhinorm/" target="_blank" rel="noopener"><code>sindhinorm</code> Python package</a> (MIT): <code>pip install sindhinorm</code>. Part of the <a href="https://github.com/ArsalanKaleem/MorphoTok-SD-UR" target="_blank" rel="noopener">MorphoTok-SD-UR</a> project. Cite: <a href="https://doi.org/10.5281/zenodo.24093294" target="_blank" rel="noopener">doi:10.5281/zenodo.24093294</a>. Everything runs in your browser; nothing you type is sent anywhere.</span>
     <span>Word counts: Sindhi Wikipedia, 2023-11-01 (61,718 words seen at least twice), by Wikipedia contributors, CC BY-SA 4.0.</span>
   </footer>
 </div>
@@ -207,7 +207,7 @@ const LEXICON_GZ_B64 = "__LEXICON_B64__";
     "native-keep": "A native speaker judged these to be different words (or was unsure), so they are never merged.",
     "lexical-guard": "A more frequent spelling exists, but it uses a different Sindhi letter and the typed form is common enough to be a real word. Left alone.",
     "already-canonical": "Already the most frequent spelling.",
-    "unknown-fold": "Not in the lexicon; only the safest folds were applied (ی ى → ي, ہ → ه).",
+    "unknown-fold": "Not in the lexicon; only the safest folds were applied (<bdi>ی</bdi> <bdi>ى</bdi> → <bdi>ي</bdi>, <bdi>ہ</bdi> → <bdi>ه</bdi>).",
     "unknown-kept": "Not in the lexicon and nothing safe to fold. Left alone.",
     "no-variant-letters": "Contains no look-alike letters.",
   };

@@ -41,7 +41,7 @@ works, not to show that it does.
 >    [`results/final_test/decision.md`](results/final_test/decision.md).
 >
 > 8. **Tool: [`sindhinorm`](https://pypi.org/project/sindhinorm/)** (`pip install sindhinorm`, MIT), a corpus-guided,
->    native-validated Sindhi spelling normalizer with a browser playground.
+>    native-validated Sindhi spelling normalizer. [Try it in your browser](https://arsalankaleem.github.io/MorphoTok-SD-UR/).
 >    It restores 94% of yeh-substituted tokens on the UD Sindhi test and 0.4% of random
 >    edits. [`docs/sdnorm.md`](docs/sdnorm.md); extensions: [`docs/extensions.md`](docs/extensions.md).
 >
