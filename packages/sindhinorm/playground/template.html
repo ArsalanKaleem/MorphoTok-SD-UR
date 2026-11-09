@@ -6,43 +6,33 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;600&display=swap">
 <style>
 /* Layout: a working bench. Input and result side by side, decisions and a letter inspector below.
-   Palette from Sindhi ajrak block print: indigo ink, madder red, on cool paper. */
+   Light-only pastel palette: lavender ground, periwinkle for encoding fixes, rose for letter
+   fixes, butter for protected words, mint for good news. Text colors are darkened for contrast. */
 :root {
-  --paper: #f3f4f8;
+  --paper: #f7f3ff;
   --sheet: #ffffff;
-  --ink: #1b2048;
-  --muted: #5b6185;
-  --line: #d9dcea;
-  --indigo: #2f3f9e;
-  --indigo-soft: #e4e8fb;
-  --madder: #a8322d;
-  --madder-soft: #fbe6e3;
-  --ochre: #8a6212;
-  --ochre-soft: #f8edd3;
-  --green: #2c6e49;
-  --green-soft: #e1f1e6;
-  --focus: #2f3f9e;
+  --tint: #fbf9ff;
+  --ink: #2f2a4a;
+  --muted: #6b6588;
+  --line: #e7e0f7;
+  --indigo: #4f55c4;
+  --indigo-soft: #e5e7ff;
+  --madder: #b23a55;
+  --madder-soft: #ffe0e8;
+  --ochre: #8a5f0c;
+  --ochre-soft: #fff1c9;
+  --green: #2a7553;
+  --green-soft: #dbf5e7;
+  --peach-soft: #ffe9dc;
+  --focus: #4f55c4;
   --f-sd: "Noto Naskh Arabic", "Segoe UI", "Tahoma", serif;
   --f-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #11142a; --sheet: #181c38; --ink: #e7e9f5; --muted: #a2a7c7; --line: #2c3158;
-    --indigo: #9aabff; --indigo-soft: #252c5c; --madder: #f08a80; --madder-soft: #45201f;
-    --ochre: #e6bd62; --ochre-soft: #3d3118; --green: #7fd1a1; --green-soft: #1b3a2a; --focus: #9aabff;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #11142a; --sheet: #181c38; --ink: #e7e9f5; --muted: #a2a7c7; --line: #2c3158;
-  --indigo: #9aabff; --indigo-soft: #252c5c; --madder: #f08a80; --madder-soft: #45201f;
-  --ochre: #e6bd62; --ochre-soft: #3d3118; --green: #7fd1a1; --green-soft: #1b3a2a; --focus: #9aabff;
-  color-scheme: dark;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 body {
-  background: var(--paper); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
+  background: var(--paper) linear-gradient(180deg, var(--peach-soft) 0, var(--paper) 360px) no-repeat; color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 28px 48px;
 }
@@ -54,15 +44,15 @@ h1 .sd { font-family: var(--f-sd); font-weight: 600; color: var(--madder); margi
 h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; font-weight: 600; }
 .bench { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 820px) { .bench { grid-template-columns: 1fr; } }
-.pane { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.pane { background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 1px 2px rgba(79, 85, 196, 0.06); padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
 .pane-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 textarea, .out {
   font-family: var(--f-sd); font-size: 1.3rem; line-height: 2.05; direction: rtl; text-align: right;
   width: 100%; min-height: 230px; border-radius: 8px; padding: 10px 12px; color: var(--ink);
 }
-textarea { border: 1px solid var(--line); background: var(--paper); resize: vertical; }
+textarea { border: 1px solid var(--line); background: var(--tint); resize: vertical; }
 textarea:focus-visible, button:focus-visible, input:focus-visible, .out mark:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.out { background: var(--paper); border: 1px solid transparent; white-space: pre-wrap; overflow-wrap: anywhere; }
+.out { background: var(--tint); border: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; }
 .out mark { background: var(--indigo-soft); color: var(--ink); border-radius: 4px; padding: 0 2px; cursor: pointer; border-bottom: 2px solid var(--indigo); }
 .out mark.lexical-merge { background: var(--madder-soft); border-bottom-color: var(--madder); }
 .out mark.kept { background: transparent; border-bottom: 2px dotted var(--ochre); }
@@ -73,7 +63,7 @@ button {
   border: 1px solid var(--line); background: var(--sheet); color: var(--ink);
 }
 button:hover { border-color: var(--indigo); }
-button.primary { background: var(--indigo); color: var(--sheet); border-color: var(--indigo); }
+button.primary { background: var(--indigo); color: #ffffff; border-color: var(--indigo); }
 .banner { border-radius: 8px; padding: 9px 12px; background: var(--green-soft); color: var(--ink); font-size: 0.9rem; }
 .banner b { color: var(--green); }
 .stats { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -105,7 +95,7 @@ tr.row:hover td, tr.row.sel td { background: var(--paper); }
 .letter.diff .cp { color: var(--madder); }
 .why { margin: 0; color: var(--ink); max-width: 60ch; }
 .note { color: var(--muted); font-size: 0.85rem; margin: 0; }
-details { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+details { background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; }
 summary { cursor: pointer; font-weight: 500; }
 .settings { display: grid; gap: 12px; padding-top: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .settings label { display: grid; gap: 4px; font-size: 0.86rem; }
