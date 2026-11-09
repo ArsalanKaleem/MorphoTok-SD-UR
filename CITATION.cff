@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use sindhinorm or the MorphoTok-SD-UR materials, please cite them as below."
+type: software
+title: "sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi"
+abstract: >-
+  sindhinorm normalizes Sindhi text typed on mixed Urdu, Persian and Arabic keyboards.
+  It decides per word, using word frequencies from Sindhi Wikipedia, and never merges
+  spelling pairs that a native Sindhi speaker judged to be different words. It is part of
+  MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.
+authors:
+  - family-names: Kaleem
+    given-names: Arsalan
+version: 0.1.0
+date-released: 2026-11-10
+license:
+  - MIT
+  - CC-BY-SA-4.0
+repository-code: "https://github.com/ArsalanKaleem/MorphoTok-SD-UR"
+url: "https://pypi.org/project/sindhinorm/"
+keywords:
+  - Sindhi
+  - text normalization
+  - Arabic script
+  - Unicode
+  - spelling variation
+  - low-resource NLP

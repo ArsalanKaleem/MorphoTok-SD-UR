@@ -1,5 +1,8 @@
 # MorphoTok-SD-UR
 
+[![PyPI](https://img.shields.io/pypi/v/sindhinorm?label=sindhinorm%20on%20PyPI)](https://pypi.org/project/sindhinorm/)
+[![License: MIT](https://img.shields.io/badge/code-MIT-blue)](packages/sindhinorm/LICENSE)
+
 A falsification-first research framework for testing whether morphology-aware and
 ZWNJ-aware tokenization helps Sindhi and Urdu. Its aim is to find out whether that
 works, not to show that it does.
