@@ -45,6 +45,11 @@ works, not to show that it does.
 >    no interval excluding 0 in 3 of 4 cells and is slightly worse (+0.45%) in Urdu V = 2000.
 >    The LMs are small and data-limited. [`docs/findings_lm.md`](docs/findings_lm.md).
 >
+> 10. **Full-corpus scale-up (preregistered, §10):** trained on full Wikipedia (sd 53k, ur 683k
+>    lines), the train-only supervision gain **replicates in all 6 cells** (V = 4000/8000/16000):
+>    Sindhi +0.030 to +0.051 F1, Urdu +0.016 to +0.020, every interval excluding 0, at +1–5%
+>    tokens/word; also on the 267 native Sindhi words. [`docs/findings_scale.md`](docs/findings_scale.md).
+>
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
 > (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Test gold is
 > silver; native gold covers 267 Sindhi dev words; the preregistration is frozen with

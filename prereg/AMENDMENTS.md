@@ -55,3 +55,17 @@ Template for each amendment:
   LM test results).
 - Run provenance: Kaggle T4, `lm_gate5.py` identical to the repository copy at `prereg-v3`;
   hashes in `docs/findings_lm.md`.
+
+## Amendment 5 — 2026-11-09 — tag prereg-v6
+- Section changed: `claim_ledger.md`, row H5 (evidence and status). Nothing else changed.
+- Old text: status "partly supported (fails ur V2000 threshold; sd V2000 not supported on
+  human dev gold)".
+- New text: full-corpus results added; status "supported at full-corpus scale (6/6); pilot-
+  scale exceptions remain on record".
+- Reason: recording the outcome of the scale-up preregistered in §10 (Amendment 3). No
+  hypothesis, contrast, threshold or analysis was changed.
+- Was any test-set result seen before this change? **yes** (dev and non-confirmatory test
+  results of the full-corpus tokenizers, reported here).
+- Run provenance: models in `runs/{SD-sindhi,UR-urdu}_full-models/` (git-ignored), trained
+  from commit `9209724` (`prereg-v4`); evaluation `scripts/16_scale_eval.py` (commit
+  `0ca29a0`).
