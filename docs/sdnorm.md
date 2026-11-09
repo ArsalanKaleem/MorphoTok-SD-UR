@@ -36,7 +36,7 @@ The bundled lexicon is Sindhi Wikipedia 2023-11-01 (all 66,141 lines), words see
 twice (61,718). With it, the evaluation below gives the same restoration (94.0%) and 1.35%
 instead of 1.38% clean tokens changed (`results/sdnorm/eval_sd_min2.md`).
 
-**Browser playground** (https://arsalankaleem.github.io/MorphoTok-SD-UR/, rebuilt and deployed by `.github/workflows/playground.yml`
+**Browser playground** (https://arsalankaleem.me/MorphoTok-SD-UR/, rebuilt and deployed by `.github/workflows/playground.yml`
 only when the parity test passes). `packages/sindhinorm/playground/` holds a JavaScript port and a
 single-page playground (`build_playground.py`). `parity_test.mjs` checks the port against the
 Python package: 0 mismatches on 139,762 words (every lexicon word and keyboard-substituted

@@ -23,7 +23,7 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/ArsalanKaleem/MorphoTok-SD-UR/tree/main/packages/sindhinorm"
 Evaluation = "https://github.com/ArsalanKaleem/MorphoTok-SD-UR/blob/main/docs/sdnorm.md"
-Playground = "https://arsalankaleem.github.io/MorphoTok-SD-UR/"
+Playground = "https://arsalankaleem.me/MorphoTok-SD-UR/"
 
 [project.scripts]
 sindhinorm = "sindhinorm.cli:main"
