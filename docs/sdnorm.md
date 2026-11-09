@@ -20,7 +20,7 @@ list CC BY-SA 4.0). `morphtok.tools.sdnorm` re-exports it, so the project's scri
 package run the same code.
 
 ```bash
-pip install -e packages/sindhinorm          # or, once released: pip install sindhinorm
+pip install sindhinorm                      # from PyPI; in this repo: pip install -e packages/sindhinorm
 sindhinorm < input.txt > output.txt
 sindhinorm explain "ھن آهی کري"             # rule and corpus counts per word
 sindhinorm build-lexicon corpus.txt -o my_lexicon.json.gz
