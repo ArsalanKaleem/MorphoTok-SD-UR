@@ -1,0 +1,10 @@
+# Full-corpus scale-up (Amendment 3, PREREG.md section 10). Exploratory robustness check.
+# --data sindhi_full | urdu_full
+data: sindhi_full
+output_dir: runs
+tokenizers: [unigram, unigram_hard_trainonly]
+eval: configs/eval/intrinsic_silver.yaml
+splits: {train: 0.8, dev: 0.1, test: 0.1}
+vocab_sizes: [4000, 8000, 16000]
+seeds: [0, 1, 2]
+train_fraction: 0.9

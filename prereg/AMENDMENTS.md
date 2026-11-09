@@ -34,3 +34,12 @@ Template for each amendment:
 - Reason: specify the downstream test before it is run on Kaggle.
 - Was any test-set result seen before this change? Tokenizer test results yes (Amendment 1);
   **no language-model result of any kind** (none has been run).
+
+## Amendment 3 — 2026-11-09 — tag prereg-v4
+- Section changed: `PREREG.md` new §10 (full-corpus scale-up). Nothing else changed.
+- Old text: none.
+- New text: §10 fixes data, systems, vocabulary sizes, metric, decision rule and prediction.
+- Reason: address the main limitation of the confirmatory test (5,000-line corpora) before
+  submission.
+- Was any test-set result seen before this change? Pilot-scale tokenizer test results yes
+  (Amendment 1); **no full-corpus result of any kind**, and no language-model result.

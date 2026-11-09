@@ -117,3 +117,23 @@ Recorded in `prereg/AMENDMENTS.md`.
   supervision and on word forms unseen in LM training; `bpe − unigram`.
 * **Prediction recorded from H7:** no transfer expected (the bigram proxy was 0.2–0.6% worse).
 * Exploratory caveats fixed now: one small LM size, a 5,000-line corpus, Wikipedia only.
+
+## 10. Full-corpus scale-up (added by Amendment 3, before any full-corpus run)
+
+* **Question (H5):** does the primary contrast `unigram_hard_trainonly − unigram` survive
+  when the tokenizers are trained on full Wikipedia instead of the 5,000-line pilot?
+* **Data:** all eligible lines of the same Wikipedia dumps (Sindhi 66,141 lines; Urdu
+  853,889), same line-hash salts, so every line keeps the split it had in the pilot.
+  Configs `configs/data/{sindhi,urdu}_full.yaml`, `configs/run/scale_full.yaml`.
+* **Systems:** `unigram`, `unigram_hard_trainonly`; V ∈ {4000, 8000, 16000}; seeds 0, 1, 2;
+  same training code and supervision (silver boundaries of train-split lemmas).
+* **Primary (for this section):** boundary F1 on the **dev** silver types (held-out lemmas).
+  **Replicates** = mean ΔF1 ≥ +0.010 and 95% t-interval over seeds excluding 0, with
+  Δ tokens/word ≤ +5%; otherwise **does not replicate** at that V.
+* **Secondary:** the same contrast on the 267 native-reviewed Sindhi dev words; and on the
+  silver **test** types, reported as non-confirmatory because those test types were already
+  used once under `prereg-v1`.
+* **Cost-driven choice fixed now:** fertility is measured on a seeded sample of 5,000 dev
+  lines per language; boundary metrics use every gold type.
+* **Prediction:** the gain replicates at every V in Sindhi; in Urdu it is smaller (pilot:
+  +0.006 at V = 2000, +0.012 at V = 4000).
