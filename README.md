@@ -40,9 +40,15 @@ works, not to show that it does.
 >    It restores 94% of yeh-substituted tokens on the UD Sindhi test and 0.4% of random
 >    edits. [`docs/sdnorm.md`](docs/sdnorm.md); extensions: [`docs/extensions.md`](docs/extensions.md).
 >
+> 9. **Gate 5 language models (preregistered, Kaggle T4, 36 runs):** the intrinsic gain
+>    does **not** transfer to language modelling. Δ bits/char (supervised − plain Unigram) has
+>    no interval excluding 0 in 3 of 4 cells and is slightly worse (+0.45%) in Urdu V = 2000.
+>    The LMs are small and data-limited. [`docs/findings_lm.md`](docs/findings_lm.md).
+>
 > **No algorithmic novelty:** the method is posterior regularization with a fixed dual
-> (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Evaluation
-> uses silver data on dev splits only; the preregistration is not frozen. See
+> (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Test gold is
+> silver; native gold covers 267 Sindhi dev words; the preregistration is frozen with
+> amendments in `prereg/AMENDMENTS.md`. See
 > [`HONESTY.md`](HONESTY.md) and `prereg/claim_ledger.md`.
 
 Real-data pilot: download the files listed in `data/raw/SOURCE.md`, run `make real-data`

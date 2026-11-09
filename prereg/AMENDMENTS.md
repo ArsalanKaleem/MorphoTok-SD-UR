@@ -43,3 +43,15 @@ Template for each amendment:
   submission.
 - Was any test-set result seen before this change? Pilot-scale tokenizer test results yes
   (Amendment 1); **no full-corpus result of any kind**, and no language-model result.
+
+## Amendment 4 — 2026-11-09 — tag prereg-v5
+- Section changed: `claim_ledger.md`, row H7 (evidence and status). Nothing else changed.
+- Old text: evidence "PROXY only … no neural LM yet"; status "untested (proxy consistent)".
+- New text: Gate 5 results added; status "supported" (no transfer in 4/4 primary cells,
+  harm in 1).
+- Reason: recording the outcome of the Gate 5 study preregistered in §9 (Amendment 2).
+  No hypothesis, contrast, threshold or analysis was changed.
+- Was any test-set result seen before this change? **yes** (this amendment reports the
+  LM test results).
+- Run provenance: Kaggle T4, `lm_gate5.py` identical to the repository copy at `prereg-v3`;
+  hashes in `docs/findings_lm.md`.
