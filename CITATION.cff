@@ -12,7 +12,15 @@ authors:
   - family-names: Kaleem
     given-names: Arsalan
 version: 0.1.0
-date-released: 2026-11-10
+date-released: 2026-11-09
+doi: 10.5281/zenodo.24093293
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24093293
+    description: Concept DOI (all versions; resolves to the latest)
+  - type: doi
+    value: 10.5281/zenodo.24093294
+    description: Version 0.1.0
 license: MIT
 repository-code: "https://github.com/ArsalanKaleem/MorphoTok-SD-UR"
 url: "https://pypi.org/project/sindhinorm/"

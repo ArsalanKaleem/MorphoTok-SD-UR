@@ -76,6 +76,14 @@ Measured with the bundled lexicon (details and scripts:
   example ھن → هن; some writers prefer ھ.
 * One native reviewer. Sindhi only (no Urdu mode).
 
+## Citing
+
+Kaleem, A. (2026). *sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi*
+(Version 0.1.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.24093294
+
+To cite whichever version is newest, use the all-versions DOI
+[10.5281/zenodo.24093293](https://doi.org/10.5281/zenodo.24093293).
+
 ## Licences
 
 * Code: MIT (`LICENSE`).
