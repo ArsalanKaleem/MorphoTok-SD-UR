@@ -23,6 +23,7 @@ setup:
 	$(PY) -m pip install --upgrade pip
 	$(PY) -m pip install -r requirements-dev.lock
 	$(PY) -m pip install --no-deps -e .
+	$(PY) -m pip install --no-deps -e packages/sindhinorm
 	-$(PY) -m pre_commit install
 
 lint:

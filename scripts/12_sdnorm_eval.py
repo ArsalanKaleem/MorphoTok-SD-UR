@@ -8,7 +8,8 @@
    the random-letter control, and the share of clean tokens the tool changes.
 3. Corpus effect on the 5,000-line Wikipedia pilot: word tokens changed, types merged.
 
-Writes ``results/sdnorm/eval_sd.md`` (metric-only). Needs the git-ignored review sheet and
+Writes ``results/sdnorm/eval_sd.md`` (metric-only); ``--min-count 2`` evaluates the lexicon
+bundled with the ``sindhinorm`` package and writes ``eval_sd_min2.md``. Needs the git-ignored review sheet and
 corpora; see data/raw/SOURCE.md.
 """
 
@@ -47,8 +48,11 @@ def main() -> int:
     """Run the three evaluations."""
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    min_count = int(sys.argv[sys.argv.index("--min-count") + 1]) if "--min-count" in sys.argv else 1
     with LEXICON_CORPUS.open(encoding="utf-8") as f:
         lex = build_lexicon(f)
+    if min_count > 1:  # the lexicon bundled with the pip package keeps words seen >= 2 times
+        lex = Counter({w: n for w, n in lex.items() if n >= min_count})
     rule = Normalizer(lex, keep=frozenset())
     full = Normalizer(lex)
     lines = ["# sdnorm evaluation (Sindhi)", "",
@@ -120,7 +124,9 @@ def main() -> int:
     print(text)
     dest = ROOT / "results" / "sdnorm"
     dest.mkdir(parents=True, exist_ok=True)
-    (dest / "eval_sd.md").write_text(text, encoding="utf-8")
+    (dest / ("eval_sd.md" if min_count == 1 else f"eval_sd_min{min_count}.md")).write_text(
+        text, encoding="utf-8"
+    )
     return 0
 
 

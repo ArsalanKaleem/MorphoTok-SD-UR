@@ -36,7 +36,8 @@ works, not to show that it does.
 >    +0.006, below the +0.010 threshold), at +1–3% tokens/word. Test gold is silver.
 >    [`results/final_test/decision.md`](results/final_test/decision.md).
 >
-> 8. **Tool: `sdnorm`**, a corpus-guided, native-validated Sindhi spelling normalizer.
+> 8. **Tool: `sindhinorm`** (pip package in `packages/sindhinorm`, MIT), a corpus-guided,
+>    native-validated Sindhi spelling normalizer with a browser playground.
 >    It restores 94% of yeh-substituted tokens on the UD Sindhi test and 0.4% of random
 >    edits. [`docs/sdnorm.md`](docs/sdnorm.md); extensions: [`docs/extensions.md`](docs/extensions.md).
 >

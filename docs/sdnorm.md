@@ -1,4 +1,4 @@
-# sdnorm: a corpus-guided, native-validated Sindhi spelling normalizer
+# sdnorm (pip package `sindhinorm`): a corpus-guided, native-validated Sindhi spelling normalizer
 
 **What it is.** A small, dependency-free tool that cleans Sindhi text typed with mixed
 keyboards: Farsi yeh ی and alef maksura ى for ي, Urdu heh-goal ہ and do-chashmi ھ for ه,
@@ -15,23 +15,31 @@ frequencies, and never merges a pair a native speaker judged different.
 
 ## Usage
 
+The normalizer is packaged as **`sindhinorm`** (`packages/sindhinorm/`; code MIT, bundled word
+list CC BY-SA 4.0). `morphtok.tools.sdnorm` re-exports it, so the project's scripts and the
+package run the same code.
+
 ```bash
-python scripts/sdnorm.py build-lexicon data/processed/sd_wiki20231101_pilot66141.txt -o sd_lexicon.json
-python scripts/sdnorm.py normalize -l sd_lexicon.json < input.txt > output.txt
-python scripts/sdnorm.py explain -l sd_lexicon.json آھي ڪي کی کتاب
+pip install -e packages/sindhinorm          # or, once released: pip install sindhinorm
+sindhinorm < input.txt > output.txt
+sindhinorm explain "ھن آهی کري"             # rule and corpus counts per word
+sindhinorm build-lexicon corpus.txt -o my_lexicon.json.gz
 ```
 
 ```python
-from pathlib import Path
+from sindhinorm import explain, normalize
 
-from morphtok.tools.sdnorm import Normalizer
-
-norm = Normalizer.load(Path("sd_lexicon.json"))
-norm.normalize("هي ڪتاب آھي")  # -> "هي ڪتاب آهي"
+normalize("هي ڪتاب آھي")  # -> "هي ڪتاب آهي"
 ```
 
-The lexicon is built from any Sindhi corpus you have the right to use; it is not shipped,
-because it is derived from Wikipedia text (CC BY-SA).
+The bundled lexicon is Sindhi Wikipedia 2023-11-01 (all 66,141 lines), words seen at least
+twice (61,718). With it, the evaluation below gives the same restoration (94.0%) and 1.35%
+instead of 1.38% clean tokens changed (`results/sdnorm/eval_sd_min2.md`).
+
+**Browser playground.** `packages/sindhinorm/playground/` holds a JavaScript port and a
+single-page playground (`build_playground.py`). `parity_test.mjs` checks the port against the
+Python package: 0 mismatches on 139,762 words (every lexicon word and keyboard-substituted
+variants) and 3,000 random texts with zero-width characters and punctuation.
 
 ## Rules (fixed before evaluation)
 

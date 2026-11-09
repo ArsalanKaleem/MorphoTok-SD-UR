@@ -1,0 +1,13 @@
+The bundled word-frequency list src/sindhinorm/data/sd_lexicon.json.gz is derived from
+Sindhi Wikipedia (dump of 2023-11-01, distributed as the Hugging Face dataset
+wikimedia/wikipedia, config 20231101.sd). Wikipedia text is licensed under the Creative
+Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0),
+https://creativecommons.org/licenses/by-sa/4.0/ . Attribution: Wikipedia contributors,
+https://sd.wikipedia.org/ .
+
+The list contains every word (after NFC and zero-width cleanup) that occurs at least twice
+in 66,141 article lines, with its count. It is distributed under CC BY-SA 4.0. If you
+redistribute the list or a modified version, keep this notice and use the same licence.
+
+The native-speaker judgements encoded in NATIVE_KEEP (src/sindhinorm/core.py) are part of
+the MIT-licensed code.
