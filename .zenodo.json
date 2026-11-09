@@ -1,0 +1,20 @@
+{
+  "title": "sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi",
+  "upload_type": "software",
+  "version": "0.1.0",
+  "creators": [
+    {
+      "name": "Kaleem, Arsalan"
+    }
+  ],
+  "description": "<p>sindhinorm normalizes Sindhi text typed on mixed Urdu, Persian and Arabic keyboards. It decides per word, using word frequencies from Sindhi Wikipedia, and never merges spelling pairs that a native Sindhi speaker judged to be different words. It restores 94.0% of words altered by Urdu-keyboard typing on the UD Sindhi test set and changes 1.35% of clean words.</p><p>Install: <code>pip install sindhinorm</code>. Code: MIT. Bundled word list: CC BY-SA 4.0 (derived from Sindhi Wikipedia). Part of MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.</p>",
+  "license": "mit",
+  "keywords": [
+    "Sindhi",
+    "text normalization",
+    "Arabic script",
+    "Unicode",
+    "spelling variation",
+    "low-resource NLP"
+  ]
+}

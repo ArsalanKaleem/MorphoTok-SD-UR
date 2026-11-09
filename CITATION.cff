@@ -7,14 +7,13 @@ abstract: >-
   It decides per word, using word frequencies from Sindhi Wikipedia, and never merges
   spelling pairs that a native Sindhi speaker judged to be different words. It is part of
   MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.
+  Code is MIT-licensed; the bundled word list is CC BY-SA 4.0 (derived from Sindhi Wikipedia).
 authors:
   - family-names: Kaleem
     given-names: Arsalan
 version: 0.1.0
 date-released: 2026-11-10
-license:
-  - MIT
-  - CC-BY-SA-4.0
+license: MIT
 repository-code: "https://github.com/ArsalanKaleem/MorphoTok-SD-UR"
 url: "https://pypi.org/project/sindhinorm/"
 keywords:
