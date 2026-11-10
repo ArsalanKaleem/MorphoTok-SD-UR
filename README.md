@@ -48,7 +48,9 @@ works, not to show that it does.
 > 9. **Gate 5 language models (preregistered, Kaggle T4, 36 runs):** the intrinsic gain
 >    does **not** transfer to language modelling. Δ bits/char (supervised − plain Unigram) has
 >    no interval excluding 0 in 3 of 4 cells and is slightly worse (+0.45%) in Urdu V = 2000.
->    The LMs are small and data-limited. [`docs/findings_lm.md`](docs/findings_lm.md).
+>    **Repeated on the full corpora (preregistered §11, 36 more LMs, no longer data-limited):
+>    no detectable effect in all 6 cells**, including on words of held-out lemmas.
+>    [`docs/findings_lm.md`](docs/findings_lm.md).
 >
 > 10. **Full-corpus scale-up (preregistered, §10):** trained on full Wikipedia (sd 53k, ur 683k
 >    lines), the train-only supervision gain **replicates in all 6 cells** (V = 4000/8000/16000):

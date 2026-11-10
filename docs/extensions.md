@@ -4,7 +4,8 @@
 
 > **Status 2026-11-09:** built and preregistered (`PREREG.md` §9, Amendment 2, tag `prereg-v3`):
 > `scripts/14_export_lm_data.py`, `scripts/lm_gate5.py`, `scripts/15_lm_report.py`; Kaggle steps in
-> `docs/kaggle_lm_tutorial.md`. **Run 2026-11-09: no transfer** (`docs/findings_lm.md`).
+> `docs/kaggle_lm_tutorial.md`. **Run 2026-11-09: no transfer; repeated on the full corpora 2026-11-10 (§11): no transfer
+> in 6/6 cells** (`docs/findings_lm.md`).
 
 Planned since the pilot (`findings_pilot.md` §9 step 3; `combined_plan.md` phase P4) and still
 open: H7 has only a token-bigram proxy, which was 0.2–0.6% *worse* for the supervised

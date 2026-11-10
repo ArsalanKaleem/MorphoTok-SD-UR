@@ -79,3 +79,16 @@ Template for each amendment:
   pilot LM could not use better segmentation.
 - Was any test-set result seen before this change? §9 LM results yes (Amendment 4) and
   full-corpus tokenizer results yes (Amendment 5); **no full-corpus LM result of any kind**.
+
+## Amendment 7 — 2026-11-10 — tag prereg-v8
+- Section changed: `claim_ledger.md`, row H7 (evidence and status). Nothing else changed.
+- Old text: status "supported: the intrinsic gain does not transfer to LM bpc (0/4 transfer,
+  1/4 small harm); small, data-limited LMs only".
+- New text: full-corpus results (§11) added; status "supported: no transfer to LM bpc in any
+  of 10 preregistered cells (pilot and full corpus; 1 small pilot harm); small LMs only".
+- Reason: recording the outcome of the study preregistered in §11 (Amendment 6). No
+  hypothesis, contrast, threshold or analysis was changed.
+- Was any test-set result seen before this change? **yes** (this amendment reports the
+  full-corpus LM test results).
+- Run provenance: Kaggle T4, `lm_gate5.py` identical to the repository copy; data from
+  `scripts/14_export_lm_data.py` at `prereg-v7`; hashes in `docs/findings_lm.md`.
