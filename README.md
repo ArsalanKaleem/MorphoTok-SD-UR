@@ -1,190 +1,209 @@
 # MorphoTok-SD-UR
 
-[![PyPI](https://img.shields.io/pypi/v/sindhinorm?label=sindhinorm%20on%20PyPI)](https://pypi.org/project/sindhinorm/)
-[![License: MIT](https://img.shields.io/badge/code-MIT-blue)](packages/sindhinorm/LICENSE)
+**Does morphology-aware tokenization help Sindhi and Urdu? A preregistered answer, and a spelling normalizer for Sindhi.**
+
+[![sindhinorm on PyPI](https://img.shields.io/pypi/v/sindhinorm?label=sindhinorm%20on%20PyPI)](https://pypi.org/project/sindhinorm/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24093293.svg)](https://doi.org/10.5281/zenodo.24093293)
+[![Playground](https://img.shields.io/badge/try%20it-in%20your%20browser-4f55c4)](https://arsalankaleem.me/MorphoTok-SD-UR/)
+![Python](https://img.shields.io/badge/python-3.11%2B-informational)
 
-A falsification-first research framework for testing whether morphology-aware and
-ZWNJ-aware tokenization helps Sindhi and Urdu. Its aim is to find out whether that
-works, not to show that it does.
+Subword tokenizers learn their pieces from frequency, so in morphologically rich languages they often cut words away from their morpheme boundaries. This repository tests, under a frozen preregistration, whether giving a tokenizer morphological supervision helps **Sindhi** and **Urdu**, two Arabic-script languages of South Asia. It contains the code, every configuration, the full preregistration history, and the result files behind each number below. It is also the home of **[`sindhinorm`](#sindhinorm-a-spelling-normalizer-for-sindhi)**, a spelling normalizer built on what the study found.
 
-> **Status (2026-10-29 pilot, exploratory; see [`docs/findings_pilot.md`](docs/findings_pilot.md)).**
-> Gates 0–3 have run on Sindhi and Urdu Wikipedia and web text, with silver morphology
-> derived from UD/UniMorph lemmas and human ZWNJ annotation from Zia et al. (2018).
-> 1. ZWNJ is nearly absent from real text (≈3–10 per 100k words) although normative
->    annotation uses it ≈6 times per 100 words. ZWNJ policies change fertility by ≤ 0.1%.
-> 2. Boundary supervision used **only during training** improves segmentation of **unseen
->    lemmas** in both languages (+0.01 to +0.04 F1, 3 seeds; also at 4× data), and a
->    fertility-matched random-boundary control does not reproduce it.
-> 3. Hard supervision ≥ soft prior (the λ curve rises monotonically to the hard limit).
-> 4. On a token-bigram proxy the gain does not transfer (0.2–0.6% worse bits/char).
->
-> 5. **POS study (combined plan, CPU pilot):** character input makes taggers far more robust to
->    spelling perturbation in both languages, and gated character fusion with the
->    morph-supervised tokenizer gives the best accuracy on unseen lemmas. In Sindhi the
->    tokenizer's morphology adds a significant gain *inside* fusion at every budget; in Urdu
->    the gain points the same way but is not significant. **With XLM-R (Kaggle T4) the
->    unseen-lemma benefit disappears (and reverses at 1%), while the spelling-robustness
->    benefit remains.** See [`docs/findings_pos.md`](docs/findings_pos.md).
->
-> 6. **Native-speaker review (Sindhi, 2026-11-09):** silver labels are only ≈55% precise.
->    Against human gold, result 2 holds at V = 4000 (+0.022 F1, CI excludes 0) but not at
->    V = 2000. Where ZWNJ does occur inside Sindhi text it mostly marks compound and ال-name
->    joins. The spelling-robustness result holds on native-approved substitutions. See
->    [`docs/findings_human_review.md`](docs/findings_human_review.md). No Urdu review or second
->    annotator is planned: Urdu results remain silver-only.
->
-> 7. **Confirmatory test (preregistration frozen as `prereg-v1`, 2026-11-09):** train-only
->    supervision beats plain Unigram on held-out test lemmas in **3 of 4** preregistered tests
->    (Sindhi V = 2000: +0.030 F1; Sindhi V = 4000: +0.033; Urdu V = 4000: +0.012; Urdu V = 2000:
->    +0.006, below the +0.010 threshold), at +1–3% tokens/word. Test gold is silver.
->    [`results/final_test/decision.md`](results/final_test/decision.md).
->
-> 8. **Tool: [`sindhinorm`](https://pypi.org/project/sindhinorm/)** (`pip install sindhinorm`, MIT), a corpus-guided,
->    native-validated Sindhi spelling normalizer. [Try it in your browser](https://arsalankaleem.me/MorphoTok-SD-UR/).
->    It restores 94% of yeh-substituted tokens on the UD Sindhi test and 0.4% of random
->    edits. [`docs/sdnorm.md`](docs/sdnorm.md); extensions: [`docs/extensions.md`](docs/extensions.md).
->
-> 9. **Gate 5 language models (preregistered, Kaggle T4, 36 runs):** the intrinsic gain
->    does **not** transfer to language modelling. Δ bits/char (supervised − plain Unigram) has
->    no interval excluding 0 in 3 of 4 cells and is slightly worse (+0.45%) in Urdu V = 2000.
->    **Repeated on the full corpora (preregistered §11, 36 more LMs, no longer data-limited):
->    no detectable effect in all 6 cells**, including on words of held-out lemmas.
->    [`docs/findings_lm.md`](docs/findings_lm.md).
->
-> 10. **Full-corpus scale-up (preregistered, §10):** trained on full Wikipedia (sd 53k, ur 683k
->    lines), the train-only supervision gain **replicates in all 6 cells** (V = 4000/8000/16000):
->    Sindhi +0.030 to +0.051 F1, Urdu +0.016 to +0.020, every interval excluding 0, at +1–5%
->    tokens/word; also on the 267 native Sindhi words. [`docs/findings_scale.md`](docs/findings_scale.md).
->
-> **No algorithmic novelty:** the method is posterior regularization with a fixed dual
-> (Ganchev et al. 2010), and its hard limit is morphological pre-segmentation. Test gold is
-> silver; native gold covers 267 Sindhi dev words; the preregistration is frozen with
-> amendments in `prereg/AMENDMENTS.md`. See
-> [`HONESTY.md`](HONESTY.md) and `prereg/claim_ledger.md`.
+## Results at a glance
 
-Real-data pilot: download the files listed in `data/raw/SOURCE.md`, run `make real-data`
-(prepares pilots, silver supervision and the Zia gold), then e.g.
-`python scripts/make_targets.py intrinsic --data sindhi --config configs/run/pilot_wiki.yaml`.
+| Question | Answer | Evidence |
+|---|---|---|
+| Does boundary supervision during training improve the segmentation of words the supervision never saw? | **Yes.** 3 of 4 preregistered tests on small corpora; **6 of 6** on full Wikipedia (Sindhi +0.030 to +0.051 boundary F1, Urdu +0.016 to +0.020), at 1 to 5% more tokens per word | [`results/final_test`](results/final_test/decision.md), [`docs/findings_scale.md`](docs/findings_scale.md) |
+| Does it hold against native-speaker labels? | **Yes** for Sindhi on full corpora (+0.026 to +0.030 F1 on 267 hand-segmented words). The automatic training labels are only about 55% precise | [`docs/findings_human_review.md`](docs/findings_human_review.md) |
+| Does the better segmentation give a better language model? | **No.** 10 preregistered settings, 72 transformer LMs, no detectable improvement in any of them | [`docs/findings_lm.md`](docs/findings_lm.md) |
+| Is the zero-width non-joiner (ZWNJ) a useful morphological signal? | **No.** It occurs 0.7 to 10 times per 100,000 words of real text; keyboard look-alike letters are far more common | [`docs/findings_pilot.md`](docs/findings_pilot.md) |
+| Can those look-alike letters be fixed safely? | **Yes, per word.** `sindhinorm` restores 94% of keyboard-substituted words and changes about 1.4% of clean words | [`docs/sdnorm.md`](docs/sdnorm.md) |
 
-## Quick start
+The method itself is not new: soft supervision is posterior regularization with a fixed dual ([Ganchev et al., 2010](https://jmlr.org/papers/v11/ganchev10a.html)) and its hard form is morphological pre-segmentation. The contribution is the empirical answer, with the negative result tested under the same rules as the positive one.
+
+## Contents
+
+- [Study design](#study-design)
+- [Findings](#findings)
+- [sindhinorm: a spelling normalizer for Sindhi](#sindhinorm-a-spelling-normalizer-for-sindhi)
+- [Preregistration](#preregistration)
+- [Reproducing the results](#reproducing-the-results)
+- [Repository layout](#repository-layout)
+- [Data and licences](#data-and-licences)
+- [Limitations](#limitations)
+- [Citation](#citation)
+
+## Study design
+
+```mermaid
+flowchart LR
+    subgraph data[Data]
+        W[Wikipedia 2023-11-01<br/>Sindhi 66k lines<br/>Urdu 854k lines]
+        U[UD treebanks + UniMorph<br/>form and lemma pairs]
+        N[Native Sindhi speaker<br/>267 words, 109 ZWNJ,<br/>150 spelling pairs]
+    end
+    U --> S[Silver boundaries<br/>train-split lemmas only]
+    W --> T[Tokenizers, 3 seeds<br/>Unigram vs Unigram + supervision]
+    S --> T
+    T --> T1[T1 pilot test<br/>prereg-v1<br/><b>3/4 pass</b>]
+    T --> T2[T2 full corpus<br/>prereg-v4<br/><b>6/6 replicate</b>]
+    T --> T3[T3, T4 language models<br/>prereg-v3, v7<br/><b>no transfer, 10/10</b>]
+    N -. native check .-> T1
+    N -. native check .-> T2
+```
+
+**Train-only supervision.** Silver boundaries come from manually annotated form and lemma pairs (UD Sindhi-Isra; UD Urdu-UDTB plus UniMorph). They are applied only to words of training-split lemmas, and only while the Unigram vocabulary is being learned. At inference the tokenizer is an ordinary Unigram model: it needs no analyzer and never sees constraints for test words. Any gain on held-out lemmas therefore comes from the vocabulary the supervision induced.
+
+```mermaid
+flowchart LR
+    A[Word of a training lemma] --> B[Silver stem boundary]
+    B --> C[Unigram EM:<br/>lattice edges that cross<br/>the boundary are removed]
+    C --> D[Learned vocabulary]
+    D --> E[Ordinary Unigram decoding<br/>of any word, no analyzer]
+    E --> F[Evaluate on lemmas<br/>never supervised]
+```
+
+The lattice equations, the soft-to-hard limit and the exact training procedure are in [`docs/lattice.md`](docs/lattice.md).
+
+## Findings
+
+### 1. ZWNJ is rare in practice; look-alike letters are not
+
+<img src="docs/assets/fig_zwnj.png" alt="ZWNJ frequency per 100,000 words in real text against normative annotation" width="760">
+
+Real text almost never contains ZWNJ, while normatively annotated Urdu uses it about 58 times per 1,000 words. Three ZWNJ policies changed tokens per word by at most 0.001. In the 109 Sindhi occurrences, a native speaker found that most are quoted Persian or stray characters. Where ZWNJ does sit inside a Sindhi word it marks a compound or an Arabic *al-* name join (13 of 17). Keyboard look-alike letters are far more frequent: in Urdu Wikipedia, off-standard yeh, kaf and heh code points occur about 25 times as often as ZWNJ.
+
+### 2. Supervision improves segmentation of unseen lemmas, and the gain replicates
+
+<img src="docs/assets/fig_tokenizer_gain.png" alt="Gain in boundary F1 from train-only supervision, with 95% confidence intervals" width="760">
+
+| Test | Sindhi | Urdu |
+|---|---|---|
+| T1, pilot corpora, silver test (V = 2000 / 4000) | +0.030 / +0.033, pass / pass | +0.006 / +0.012, fail (below +0.010) / pass |
+| T2, full corpora, silver dev (V = 4000 / 8000 / 16000) | +0.030 / +0.035 / +0.051, all pass | +0.016 / +0.017 / +0.020, all pass |
+| Native Sindhi words, full-corpus tokenizers | +0.026 / +0.030 / +0.030, intervals exclude 0 | not reviewed |
+
+A random-boundary control with the same fertility does not reproduce the gain, the hard constraint beats the soft prior, and BPE segments held-out lemmas worse than Unigram in all four T1 cells. Details: [`results/final_test/decision.md`](results/final_test/decision.md), [`results/scale_full/`](results/scale_full/), [`results/human_gold/`](results/human_gold/).
+
+### 3. The gain does not reach language modelling
+
+<img src="docs/assets/fig_lm_deltas.png" alt="Change in bits per character from the supervised tokenizer, pilot and full corpora" width="760">
+
+Small decoder-only transformers (3.7M to 7.3M parameters, Kaggle T4) were trained on the output of each tokenizer and scored in bits per character, which is comparable across tokenizers. On the pilot corpora the supervised tokenizer never helped and was slightly worse in one cell (Urdu V = 2000, +0.45%). Those models overfit early, so the study was repeated on the full corpora:
+
+<img src="docs/assets/fig_lm_curves.png" alt="Dev bits per character during training: pilot models overfit, full-corpus models do not" width="760">
+
+With enough text the models no longer overfit and test bpc falls by about half a bit, yet the result is the same: **no detectable effect in all 6 cells**, including on words of held-out lemmas. Across both studies the supervised tokenizer never gave a better language model in any of 10 preregistered settings. Tables and provenance: [`docs/findings_lm.md`](docs/findings_lm.md).
+
+### 4. Part-of-speech tagging (exploratory)
+
+With taggers trained from scratch, character input is what makes them robust to spelling changes, and the tokenizer's morphology adds accuracy on unseen lemmas only together with character features (Sindhi: +0.020, +0.011 and +0.026 at 1%, 10% and 100% of the data). With a pretrained encoder (XLM-R) the unseen-lemma benefit disappears while the robustness benefit remains. These runs used the UD test sets during development, so they are reported as exploratory: [`docs/findings_pos.md`](docs/findings_pos.md).
+
+## sindhinorm: a spelling normalizer for Sindhi
+
+Sindhi text is often typed on Urdu, Persian or Arabic keyboards, so identical-looking letters are different characters: ی for ي, ہ or ھ for ه, ک or ك for ڪ. A fixed character map cannot fix this, because ک and ڪ are both Sindhi letters (کي "to" and ڪي "some" are different words). `sindhinorm` decides per word, using spelling frequencies from Sindhi Wikipedia, and never merges a pair that a native speaker judged to be different words.
+
+**[Try it in your browser](https://arsalankaleem.me/MorphoTok-SD-UR/)**: paste text, see which words change and why, and inspect every letter's code point.
+
+<a href="https://arsalankaleem.me/MorphoTok-SD-UR/"><img src="docs/assets/playground.png" alt="The sindhinorm playground: input text, normalized output with highlighted changes, per-word decisions and a letter inspector" width="900"></a>
 
 ```bash
-make setup        # python3.11 -m venv .venv + pinned deps (requirements-dev.lock) + editable install
-make lint test    # ruff + pytest
-make gate1        # ZWNJ/format-character audit + stratified annotation sheet
-make gate0        # BPE / Unigram / char x {preserve, remove, boundary_marker}, matched vocab
-make gate2        # analyzer coverage; prints NO REAL ANALYZER CONFIGURED when none is set
-make tokenizer    # train all configured tokenizers x vocab sizes x seeds
-make intrinsic    # boundary F1, fertility, paired CIs, soft-vs-hard, normalization share
-make ablations    # lambda / penalty / analyzer-noise / random-boundary control / sampling
-make clean
+pip install sindhinorm
 ```
 
-Every target uses `DATA=synthetic` by default; `make gate0 DATA=urdu` uses the Urdu
-config and fails loudly until a corpus is configured. Without `make` (e.g. on Windows):
-`python scripts/make_targets.py gate0 --data synthetic`.
+```python
+from sindhinorm import normalize, explain
 
-## What the framework does
-
-```
-raw text ──NFC──▶ canonical words ──ZWNJ policy──▶ pre-tokens ──tokenizer(+constraints)──▶ tokens
-                        │                                              ▲
-                        └──strip ZWNJ/ZWJ──▶ analyzer ──confidence──▶ MANDATORY/PREFERRED/FORBIDDEN/UNKNOWN
-evaluation: boundaries mapped back to format-stripped coordinates; fertility over raw orthographic words
+normalize("هي ڪتاب آهی")  # 'هي ڪتاب آهي' (Farsi yeh fixed)
+normalize("ڪي کي")  # 'ڪي کي' (two different words, left alone)
+explain("ھن آهی کري")  # the rule and corpus counts behind each decision
 ```
 
-* **Reference Unigram lattice** (`src/morphtok/tokenizers/lattice_unigram.py`): forward,
-  backward, Viterbi, k-best, forward-filter/backward-sample, entropy diagnostic, EM training
-  to an exact vocabulary size, optional per-edge soft costs and hard exclusions. The maths
-  and the soft-to-hard limit are written out in [`docs/lattice.md`](docs/lattice.md).
-* **Constraint layer** (`constraints.py`): four boundary types with explicit confidence;
-  positions with no analyzer output are `UNKNOWN`, never `FORBIDDEN`.
-* **Unicode audit** (`unicode_audit/`): ZWNJ, ZWJ and every other `Cf` character counted
-  *separately*, by neighbour class, position in the word, run length and normalization
-  form. Joining classes are reported `UNAVAILABLE` unless you supply `ArabicShaping.txt`.
-* **Analyzers** (`analyzers/`): an abstract interface, a provenance-enforcing rule engine
-  that ships with no rules, a stub Urdu FST wrapper, perturbation and random-boundary
-  wrappers, calibration (ECE), and a synthetic-only oracle that refuses real data.
-* **Metrics & statistics** (`eval/`): explicit denominators; paired bootstrap,
-  approximate randomization, Cohen's d_z, t-intervals over seeds, Wilson intervals; failed
-  runs are counted.
-* **Experiment registry** (`configs/experiments/registry.yaml`): 12 specifications across
-  families A–G. Each one must answer the six mandatory questions or it is rejected on load.
-* **Objective registry + novelty screen** (`configs/experiments/objectives.yaml`,
-  [`docs/novelty_screening.md`](docs/novelty_screening.md)): an objective cannot be
-  labelled `contribution` until its seven-step screen is complete.
-* **Provenance**: every run writes a JSON record (`schemas/result.schema.json`) with git
-  commit/dirty state, prereg freeze status, config/data hashes, environment and
-  warnings, and appends it to `runs/ledger.jsonl`, including failed and skipped runs.
-* **Follow-up generator** (`experiments/followups.py`): turns measured patterns into
-  `proposed` hypotheses (`schemas/hypothesis.schema.json`); it never promotes them to claims.
-* **Preregistration** (`prereg/`): hypotheses, gates 0–5 and a claim ledger, with every
-  threshold `UNRESOLVED` until a pilot exists. `make prereg-freeze` refuses a dirty tree
-  and creates a `prereg-vN` tag. `make prereg-status` verifies the freeze rather than
-  assuming it.
-
-## The first experiment that could falsify the central premise
-
-**Gate 0 on a real corpus** (`make gate0 DATA=urdu` or `DATA=sindhi`) needs only raw text,
-with no analyzer and no annotation. It compares `unigram`, `unigram_zwnj_norm` and the
-`boundary_marker` policy at matched vocabulary sizes over 3 seeds. Then `make intrinsic`
-reports the **normalization share**, Δ(zwnj_norm − unigram) / Δ(soft − unigram). If ZWNJ
-removal alone accounts for the fertility difference, the ZWNJ-loss claim is dropped
-(Gate 0) before any analyzer work. The same corpus run of `make gate1` produces the
-stratified annotation sheet for H2. That is the cheapest next step, and it needs about 200
-annotated occurrences rather than a full gold set.
-
-Two measurement artefacts the framework already guards against, both demonstrated on
-synthetic data only:
-
-* the `boundary_marker` policy forces a boundary at every ZWNJ, so boundary F1 rises
-  "for free" wherever ZWNJ coincides with a morpheme join;
-* removing ZWNJ deletes characters, so tokens per word falls mechanically. That is why
-  fertility is never treated as evidence of a better tokenizer on its own.
-
-## Adding real resources
-
-1. Put the corpus in `data/raw/`, write `data/raw/SOURCE.md` (URL, licence, date, SHA-256),
-   and set `corpus.path` and `corpus.licence` in `configs/data/<lang>.yaml`.
-2. Run Gates 0 and 1; annotate the sheet using [`audit/annotation_guidelines.md`](audit/annotation_guidelines.md).
-3. Build dev/test boundary gold (`audit/sampling_protocol.md`) and configure an analyzer
-   (`analyzer.rules_path` or `analyzer.command`); run Gate 2.
-4. Run the pilot, fill in thresholds in `prereg/`, commit, then `make prereg-freeze`.
-5. Only then run `04_intrinsic_eval.py --split test --final`. On real data it refuses if
-   the prereg is not frozen.
-
-## Native-speaker review (the current bottleneck)
-
-The pilot's main result rests on *silver* labels. Three review tasks turn it into human
-evidence. Each is done per language and needs no programming:
-
-| Task | Sheet | Settles |
-|---|---|---|
-| Morpheme boundaries for 300 held-out words | `<lang>_boundaries.tsv` | the main result (unseen-word segmentation) and silver-label precision |
-| Label each ZWNJ occurrence | `<lang>_zwnj.tsv` | H2: is ZWNJ morphological in actual usage? |
-| SAME / DIFFERENT for spelling pairs | `<lang>_letter_variants.tsv` | which letter normalizations are legitimate |
-
-```
-make review-sheets     # once: writes data/audit/review/ (git-ignored)
-make review-ingest     # any time: progress, row-level problems, imports answers
+```bash
+sindhinorm < input.txt > output.txt
+sindhinorm explain "ھن آهی کري"
 ```
 
-Instructions for reviewers: [`audit/REVIEWING.md`](audit/REVIEWING.md).
+| Test | Result |
+|---|---|
+| UD Sindhi test, every ي typed as ی | **94.0%** of 4,511 altered words restored |
+| Same words, one random letter changed (control) | 0.4% restored (it does not guess at typos) |
+| Clean words changed | 1.35% (bundled word list) |
+| 150 native-judged pairs, frequency rule alone | merge precision 0.874, recall 0.992; the 24 different-word pairs are protected explicitly |
 
-## Layout
+Source, browser version and release guide: [`packages/sindhinorm/`](packages/sindhinorm/). Evaluation details and limits: [`docs/sdnorm.md`](docs/sdnorm.md).
+
+## Preregistration
+
+Hypotheses, data, systems, metrics and decision rules were committed and frozen in a git tag before each test. Every later change to the preregistration files is an amendment that states what changed, why, and whether test results had been seen.
+
+| Tag | What it froze or recorded |
+|---|---|
+| `prereg-v1` | thresholds and the four primary tokenizer tests (T1) |
+| `prereg-v2` | Amendment 1: T1 outcome recorded |
+| `prereg-v3` | Amendment 2: pilot language-model study (T3) |
+| `prereg-v4` | Amendment 3: full-corpus tokenizer replication (T2) |
+| `prereg-v5` | Amendment 4: T3 outcome recorded |
+| `prereg-v6` | Amendment 5: T2 outcome recorded |
+| `prereg-v7` | Amendment 6: full-corpus language-model study (T4) |
+| `prereg-v8` | Amendment 7: T4 outcome recorded |
+
+Start with [`prereg/PREREG.md`](prereg/PREREG.md), [`prereg/AMENDMENTS.md`](prereg/AMENDMENTS.md) and the [`prereg/claim_ledger.md`](prereg/claim_ledger.md), which lists every claim with its evidence and status. `python scripts/prereg_freeze.py status` checks a freeze rather than assuming it.
+
+## Reproducing the results
+
+```bash
+make setup          # venv with pinned dependencies (Python 3.11), editable installs
+make lint test      # ruff + pytest
+```
+
+Without `make` (for example on Windows), run the same steps from the `Makefile` or call `python scripts/make_targets.py <target>`.
+
+1. **Data.** Download the files listed with URLs and SHA-256 hashes in [`data/raw/SOURCE.md`](data/raw/SOURCE.md), then run `make real-data`. Corpora and derived files are not committed (licences and size).
+2. **Tokenizers and intrinsic tests.** `make tokenizer`, `make intrinsic` and `make ablations` (pilot); `scripts/04_intrinsic_eval.py --split test --final` (T1, refuses to run unless the preregistration is frozen); `scripts/16_scale_eval.py` (T2).
+3. **Language models.** `scripts/14_export_lm_data.py` writes token streams; `scripts/lm_gate5.py` trains and scores the models (one GPU; step-by-step Kaggle guides in [`docs/kaggle_lm_tutorial.md`](docs/kaggle_lm_tutorial.md) and [`docs/kaggle_lm_full_tutorial.md`](docs/kaggle_lm_full_tutorial.md)); `scripts/15_lm_report.py` applies the decision rule.
+4. **Native-label analyses.** `scripts/10_human_gold_eval.py`, `scripts/11_confusable_approved.py`, `scripts/12_sdnorm_eval.py`.
+5. **Figures in this README.** `python scripts/17_readme_figures.py` (needs `matplotlib`).
+
+Every run writes a JSON record with the git commit, preregistration status, configuration and data hashes to `runs/ledger.jsonl`, including failed runs.
+
+## Repository layout
 
 ```
-configs/      data, tokenizer, eval, run, experiments (registry + objectives)
-src/morphtok/ data · unicode_audit · analyzers · tokenizers · eval · downstream · experiments
-scripts/      00–05 gate scripts, prereg_freeze.py, make_targets.py
-prereg/       PREREG, claim ledger, decision gates, amendments
-audit/        annotation guidelines, sampling protocol, agreement.py
-docs/         lattice maths, objectives, novelty screening
-schemas/      result and hypothesis JSON schemas
-data/         empty by design (see data/README.md)
-tests/        unit + synthetic integration tests; tests/fixtures/synthetic/
+src/morphtok/          tokenizers (reference Unigram lattice, constraints), data, analyzers,
+                       evaluation and statistics, downstream models, experiment registry
+packages/sindhinorm/   the pip package, its browser playground and JS-vs-Python parity test
+scripts/               numbered experiment scripts (00 to 17) and helpers
+configs/               data, tokenizer, evaluation, run and experiment configurations
+prereg/                preregistration, amendments, decision gates, claim ledger
+results/               metric-only result files behind every reported number
+docs/                  findings per study, method notes, Kaggle guides, README assets
+audit/                 annotation guidelines, sampling protocol, reviewer instructions
+schemas/               JSON schemas for run records and hypotheses
+tests/                 unit and synthetic integration tests
+data/                  empty by design; see data/README.md
 ```
 
-The exact required tree is present; files added beyond it, and the reasons, are listed in
-`HONESTY.md`.
+[`HONESTY.md`](HONESTY.md) lists what exists, what does not, and what has not been tested.
+
+## Data and licences
+
+- **Code:** MIT ([`LICENSE`](LICENSE)). The `sindhinorm` package is MIT as well; its bundled word list is CC BY-SA 4.0 because it is derived from Wikipedia.
+- **Corpora and annotations used** (not redistributed here): Sindhi and Urdu Wikipedia (CC BY-SA), [UD Sindhi-Isra](https://github.com/UniversalDependencies/UD_Sindhi-Isra) (CC BY-SA 4.0), [UD Urdu-UDTB](https://github.com/UniversalDependencies/UD_Urdu-UDTB) (CC BY-NC-SA 4.0, non-commercial), UniMorph Urdu (CC BY-SA 3.0) and the Urdu segmentation corpus of Zia et al. (2018) (CC BY 4.0). Details and checksums: [`data/raw/SOURCE.md`](data/raw/SOURCE.md).
+- **Result files** in `results/` contain metrics only, no corpus text.
+
+## Limitations
+
+- All corpora are Wikipedia, so results may differ for news, social media or literature.
+- The confirmatory tokenizer tests use automatically derived (silver) labels. The native check covers 267 Sindhi words labelled by one annotator; Urdu has no native check.
+- Three seeds per setting give wide intervals, especially for the language models, which are small (at most 7.3M parameters) and were still improving slowly when training stopped.
+- The part-of-speech study is exploratory.
+
+## Citation
+
+To cite the software, use the DOI [10.5281/zenodo.24093293](https://doi.org/10.5281/zenodo.24093293) (all versions) or GitHub's **Cite this repository** button, which reads [`CITATION.cff`](CITATION.cff).
+
+## Acknowledgements
+
+This work relies on the Universal Dependencies treebanks for Sindhi (Bauer et al., 2025) and Urdu (Bhat et al., 2017), UniMorph, the Urdu segmentation corpus of Zia et al. (2018), and Wikipedia's Sindhi and Urdu contributors. Language-model experiments ran on Kaggle. An AI assistant (Claude) helped write code, run analyses and draft documentation; all native-speaker judgements were made by hand, as described in [`docs/findings_human_review.md`](docs/findings_human_review.md).
