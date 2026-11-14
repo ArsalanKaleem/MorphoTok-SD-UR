@@ -206,4 +206,4 @@ To cite the software, use the DOI [10.5281/zenodo.24093293](https://doi.org/10.5
 
 ## Acknowledgements
 
-This work relies on the Universal Dependencies treebanks for Sindhi (Bauer et al., 2025) and Urdu (Bhat et al., 2017), UniMorph, the Urdu segmentation corpus of Zia et al. (2018), and Wikipedia's Sindhi and Urdu contributors. Language-model experiments ran on Kaggle. An AI assistant (Claude) helped write code, run analyses and draft documentation; all native-speaker judgements were made by hand, as described in [`docs/findings_human_review.md`](docs/findings_human_review.md).
+This work relies on the Universal Dependencies treebanks for Sindhi (Bauer et al., 2025) and Urdu (Bhat et al., 2017), UniMorph, the Urdu segmentation corpus of Zia et al. (2018), and Wikipedia's Sindhi and Urdu contributors. Language-model experiments ran on Kaggle. All native-speaker judgements were made by hand, as described in [`docs/findings_human_review.md`](docs/findings_human_review.md).

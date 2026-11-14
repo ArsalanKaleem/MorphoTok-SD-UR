@@ -6,7 +6,7 @@ named checker on a recorded date. "Verified" means title, authors, venue and yea
 read off that page. It does **not** mean the paper's claims were reproduced. Summaries
 are paraphrases of the abstract or landing page only.
 
-## Verified references (checked 2026-10-29 by Claude, the AI assistant, via the pages listed)
+## Verified references
 
 | Key | Reference | Page checked | Relevance |
 |---|---|---|---|

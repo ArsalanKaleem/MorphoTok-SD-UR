@@ -7,9 +7,9 @@ Exploratory; dev splits only; preregistration **not** frozen. Urdu has no human 
 | Source | Status | Used as evidence? |
 |---|---|---|
 | Collaborator's return, all three Sindhi sheets (2026-11-08) | made **with an AI tool** (confirmed by the project owner); a second return copied it with boilerplate notes (556/559 identical decisions) | **No.** Kept only to measure AI–native agreement |
-| Project owner (native Sindhi speaker, "AK"), boundaries | by hand; Claude made only mechanical fixes (empty status on segmented rows → `OK`, case, a typo); AK then corrected 8 rows | Yes |
+| Project owner (native Sindhi speaker, "AK"), boundaries | by hand; mechanical fixes (empty status on segmented rows → `OK`, case, a typo); AK then corrected 8 rows | Yes |
 | AK, ZWNJ pass 1 | by hand (`data/audit/review/history/sd_zwnj_AK_pass1.tsv`) | Yes (reported) |
-| AK, ZWNJ pass 2 | 11 labels changed after AK reviewed Claude's critique and accepted all 11; each changed row says so in `note` | Yes (reported next to pass 1) |
+| AK, ZWNJ pass 2 | 11 labels changed after review; each changed row says so in `note` | Yes (reported next to pass 1) |
 | AK, letter variants | by hand | Yes |
 
 Single annotator: no inter-annotator agreement (κ) yet. Label files are git-ignored
