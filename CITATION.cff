@@ -24,6 +24,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.24093294
     description: Version 0.1.0
+  - type: doi
+    value: 10.5281/zenodo.24448229
+    description: Version 0.2.0
 license: MIT
 repository-code: "https://github.com/ArsalanKaleem/MorphoTok-SD-UR"
 url: "https://pypi.org/project/sindhinorm/"

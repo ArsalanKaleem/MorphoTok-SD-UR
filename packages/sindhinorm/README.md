@@ -97,7 +97,7 @@ The 0.1.0 rules followed Wikipedia's majority spelling even into non-Sindhi lett
 ## Citing
 
 Kaleem, A. (2026). *sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi*
-(Version 0.1.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.24093294
+(Version 0.2.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.24448229
 
 To cite whichever version is newest, use the all-versions DOI
 [10.5281/zenodo.24093293](https://doi.org/10.5281/zenodo.24093293).
