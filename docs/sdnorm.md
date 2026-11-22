@@ -116,3 +116,10 @@ words; it is a candidate for native review. The SiPOS observations motivated the
 SiPOS rows are not an independent test of it; the UD rows and the preregistered tagging study
 (PREREG §12) are. The browser port matches Python in all three configurations (0 mismatches on
 139,762 words and 3,000 texts each).
+
+**Downstream test (PREREG §12, `docs/findings_norm_pos.md`).** A BiLSTM POS tagger trained on
+SiPOS falls from 0.982 to 0.494 accuracy on Urdu-keyboard-typed test text; with 0.2.0 it reaches
+0.924 (+0.430 [+0.382, +0.478]) and its clean accuracy is unchanged (−0.002 [−0.013, +0.010]).
+The 0.1.0 and 0.2.0 rules do not differ measurably in tagging accuracy. Of the keyboard-typed
+tokens left unrestored, 59% are native keep-list pairs (mostly تہ for ته and کی for کي), which
+points to context-sensitive handling of those pairs as the next step.

@@ -18,7 +18,8 @@ Subword tokenizers learn their pieces from frequency, so in morphologically rich
 | Does it hold against native-speaker labels? | **Yes** for Sindhi on full corpora (+0.026 to +0.030 F1 on 267 hand-segmented words). The automatic training labels are only about 55% precise | [`docs/findings_human_review.md`](docs/findings_human_review.md) |
 | Does the better segmentation give a better language model? | **No.** 10 preregistered settings, 72 transformer LMs, no detectable improvement in any of them | [`docs/findings_lm.md`](docs/findings_lm.md) |
 | Is the zero-width non-joiner (ZWNJ) a useful morphological signal? | **No.** It occurs 0.7 to 10 times per 100,000 words of real text; keyboard look-alike letters are far more common | [`docs/findings_pilot.md`](docs/findings_pilot.md) |
-| Can those look-alike letters be fixed safely? | **Yes, per word.** `sindhinorm` restores 94% of keyboard-substituted words and changes about 1.4% of clean words | [`docs/sdnorm.md`](docs/sdnorm.md) |
+| Can those look-alike letters be fixed safely? | **Yes, per word.** `sindhinorm` 0.2.0 restores 95% of keyboard-substituted words and changes 0.03% of clean words | [`docs/sdnorm.md`](docs/sdnorm.md) |
+| Does that help an NLP model? | **Yes.** A POS tagger on Urdu-keyboard-typed Sindhi news goes from 0.494 to 0.924 accuracy with normalization, with no measurable cost on clean text (preregistered) | [`docs/findings_norm_pos.md`](docs/findings_norm_pos.md) |
 
 The method itself is not new: soft supervision is posterior regularization with a fixed dual ([Ganchev et al., 2010](https://jmlr.org/papers/v11/ganchev10a.html)) and its hard form is morphological pre-segmentation. The contribution is the empirical answer, with the negative result tested under the same rules as the positive one.
 
@@ -117,20 +118,23 @@ from sindhinorm import normalize, explain
 
 normalize("هي ڪتاب آهی")  # 'هي ڪتاب آهي' (Farsi yeh fixed)
 normalize("ڪي کي")  # 'ڪي کي' (two different words, left alone)
-explain("ھن آهی کري")  # the rule and corpus counts behind each decision
+explain("ہن آهی کري")  # the rule and corpus counts behind each decision
 ```
 
 ```bash
 sindhinorm < input.txt > output.txt
-sindhinorm explain "ھن آهی کري"
+sindhinorm explain "ہن آهی کري"
 ```
 
-| Test | Result |
-|---|---|
-| UD Sindhi test, every ي typed as ی | **94.0%** of 4,511 altered words restored |
-| Same words, one random letter changed (control) | 0.4% restored (it does not guess at typos) |
-| Clean words changed | 1.35% (bundled word list) |
-| 150 native-judged pairs, frequency rule alone | merge precision 0.874, recall 0.992; the 24 different-word pairs are protected explicitly |
+Version 0.2.0 (keyboard mode, the default) rewrites only letters that Urdu, Persian or Arabic keyboards produce, only towards Sindhi letters, and leaves correctly typed Sindhi alone. `mode="frequency"` keeps the 0.1.0 rules.
+
+| Test | 0.2.0 | 0.1.0 rules |
+|---|---|---|
+| UD Sindhi test, every ي typed as ی: altered words restored | **94.9%** | 94.0% |
+| Same words, one random letter changed (control): "restored" | 0.3% | 0.4% |
+| Clean UD words changed | **0.03%** | 1.35% |
+| Clean Sindhi news (SiPOS) changed | **0.002%** | 0.39% |
+| POS tagger on Urdu-keyboard-typed SiPOS news (clean text: 0.982) | **0.924** (from 0.494) | 0.925 |
 
 Source, browser version and release guide: [`packages/sindhinorm/`](packages/sindhinorm/). Evaluation details and limits: [`docs/sdnorm.md`](docs/sdnorm.md).
 

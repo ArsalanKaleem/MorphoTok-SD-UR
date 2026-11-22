@@ -11,6 +11,8 @@
 * `mode="frequency"` (CLI `--mode frequency`) reproduces the 0.1.0 rules exactly.
 * Unknown words: keyboard letters get their usual Sindhi letter (ی ى ے → ي, ہ → ه, ك → ڪ).
 * Browser playground: rule switch and heh option; JavaScript port matches Python in all modes.
+* Tested downstream (preregistered): on Urdu-keyboard-typed SiPOS news, a BiLSTM tagger goes
+  from 0.494 to 0.924 accuracy with normalization, with no measurable change on clean text.
 
 ## 0.1.0 (2026-11-10)
 

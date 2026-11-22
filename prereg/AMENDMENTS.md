@@ -125,3 +125,15 @@ Template for each amendment:
 - Provenance plan: the Kaggle package records the SHA-256 of `19_norm_pos.py`; the downloaded
   copy of the script must equal the repository version at this tag.
 
+## Amendment 10 — 2026-11-22 — tag prereg-v11
+- Section changed: `claim_ledger.md`, row H9 (evidence and status). Nothing else changed.
+- Old text: "Not yet run…"; status "untested".
+- New text: §12 results added; status "supported".
+- Reason: recording the outcome of the study preregistered in §12 (Amendments 8 and 9). No
+  hypothesis, contrast, threshold or analysis was changed. `scripts/20_norm_pos_report.py`,
+  which applies the §12 rules, was written after the freeze and before any result existed.
+- Was any test-set result seen before this change? **yes** (this amendment reports them).
+- Run provenance: Kaggle T4, 36 runs on `cuda`; the downloaded working copy of the code and the
+  word list are identical to the repository at `prereg-v10` (line endings normalized); hashes
+  in `docs/findings_norm_pos.md`.
+

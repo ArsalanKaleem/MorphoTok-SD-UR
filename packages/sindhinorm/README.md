@@ -81,6 +81,11 @@ Measured with the bundled word list (details and scripts:
 | Clean UD Sindhi words changed | **0.03%** | 1.35% |
 | Clean Sindhi news (SiPOS, 293,683 tokens) changed | **0.002%** | 0.39% |
 
+**Does it help NLP models?** In a preregistered test, a part-of-speech tagger trained on Sindhi
+news (SiPOS) scored 0.982 on clean text but only 0.494 on the same text typed on an Urdu keyboard.
+Normalizing with 0.2.0 brought it back to **0.924** (+0.43), with no measurable change on clean
+text (−0.002, interval includes 0). Details: [docs/findings_norm_pos.md](https://github.com/ArsalanKaleem/MorphoTok-SD-UR/blob/main/docs/findings_norm_pos.md).
+
 The 0.1.0 rules followed Wikipedia's majority spelling even into non-Sindhi letters, for example
 عبدالقدير → عبدالقدیر, or between real words, لڪيل → لکيل. Version 0.2.0 makes neither change.
 
