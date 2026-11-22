@@ -4,16 +4,18 @@ type: software
 title: "sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi"
 abstract: >-
   sindhinorm normalizes Sindhi text typed on mixed Urdu, Persian and Arabic keyboards.
-  It decides per word, using word frequencies from Sindhi Wikipedia, and never merges
-  spelling pairs that a native Sindhi speaker judged to be different words. It is part of
+  Since 0.2.0 it changes only the letters a non-Sindhi keyboard produces and leaves
+  correctly typed Sindhi alone. It decides per word, using word frequencies from Sindhi
+  Wikipedia, and never merges spelling pairs that a native Sindhi speaker judged to be
+  different words. It is part of
   MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.
   Code is MIT-licensed; the bundled word list is CC BY-SA 4.0 (derived from Sindhi Wikipedia).
 authors:
   - family-names: Kaleem
     given-names: Arsalan
     orcid: "https://orcid.org/0009-0002-9054-6965"
-version: 0.1.0
-date-released: 2026-11-09
+version: 0.2.0
+date-released: 2026-11-22
 doi: 10.5281/zenodo.24093293
 identifiers:
   - type: doi

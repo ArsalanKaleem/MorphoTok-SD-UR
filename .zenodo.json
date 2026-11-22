@@ -1,14 +1,14 @@
 {
   "title": "sindhinorm: a corpus-guided, native-validated spelling normalizer for Sindhi",
   "upload_type": "software",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "creators": [
     {
       "name": "Kaleem, Arsalan",
       "orcid": "0009-0002-9054-6965"
     }
   ],
-  "description": "<p>sindhinorm normalizes Sindhi text typed on mixed Urdu, Persian and Arabic keyboards. It decides per word, using word frequencies from Sindhi Wikipedia, and never merges spelling pairs that a native Sindhi speaker judged to be different words. It restores 94.0% of words altered by Urdu-keyboard typing on the UD Sindhi test set and changes 1.35% of clean words.</p><p>Install: <code>pip install sindhinorm</code>. Code: MIT. Bundled word list: CC BY-SA 4.0 (derived from Sindhi Wikipedia). Part of MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.</p>",
+  "description": "<p>sindhinorm normalizes Sindhi text typed on mixed Urdu, Persian and Arabic keyboards. Version 0.2.0 changes only the letters a non-Sindhi keyboard produces and leaves correctly typed Sindhi alone. It decides per word, using word frequencies from Sindhi Wikipedia, and never merges spelling pairs that a native Sindhi speaker judged to be different words. On the UD Sindhi test set it restores 94.9% of words altered by Urdu-keyboard typing and changes 0.03% of clean words.</p><p>In a preregistered test, a part-of-speech tagger trained on Sindhi news (SiPOS) scored 0.494 on the same text typed on an Urdu keyboard; with sindhinorm 0.2.0 it scored 0.924, with no measurable change on clean text.</p><p>Install: <code>pip install sindhinorm</code>. Code: MIT. Bundled word list: CC BY-SA 4.0 (derived from Sindhi Wikipedia). Part of MorphoTok-SD-UR, a preregistered study of morphology-aware tokenization for Sindhi and Urdu.</p>",
   "license": "mit",
   "keywords": [
     "Sindhi",
@@ -16,6 +16,7 @@
     "Arabic script",
     "Unicode",
     "spelling variation",
-    "low-resource NLP"
+    "low-resource NLP",
+    "part-of-speech tagging"
   ]
 }
