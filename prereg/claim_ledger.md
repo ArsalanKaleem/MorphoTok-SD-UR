@@ -20,6 +20,7 @@ Status values: **untested** · **pilot-only** · **supported** · **contradicted
 | Gated > parameter-matched concat (C4) | C4 | gated vs concat, paired | PILOT: CPU only at the 10% budget (unseen lemma ≈ +0.03); XLM-R: no robustness difference, unseen-lemma +0.011 to +0.013 in two cells only | weak; gate not the contribution |
 | Tokenizer morphology and character input are complementary (C5) | C5 | gated:hard vs gated:unigram | PILOT: vs the same tokenizer without supervision (`gated:unigram`), sd +0.011 to +0.026 unseen-lemma at all budgets (CIs exclude 0); ur same direction, not significant. vs `gated:bpe` (sd): ahead but CIs include 0 | pilot-only (sd only; not shown vs BPE) |
 | Objective A is a new method | — | completed novelty screen (docs/novelty_screening.md) | Screen done: A = posterior regularization with a fixed dual (Ganchev et al. 2010); B = pre-segmentation | withdrawn |
+| Spelling normalization helps POS tagging of keyboard-typed Sindhi without harming clean text | H9 | PREREG §12: SiPOS, word tagger, keyboard − none on keyboard-typed and clean test, 3 seeds | Not yet run. Exploratory dev smoke runs only (PREREG §12, known-before-freezing) | untested |
 
 ## Change log
 

@@ -26,6 +26,7 @@ from morphtok.tools.sdnorm import Normalizer, build_lexicon, tokens  # noqa: E40
 
 LEXICON_CORPUS = ROOT / "data" / "processed" / "sd_wiki20231101_pilot66141.txt"
 PILOT = ROOT / "data" / "processed" / "sd_wiki20231101_pilot5000.txt"
+SIPOS = ROOT / "data" / "raw" / "sipos" / "SiPOS" / "SiPOS tagset.txt"
 SHEET = ROOT / "data" / "audit" / "review" / "sd_letter_variants.tsv"
 TASK = ROOT / "data" / "tasks" / "sd_pos"
 
@@ -49,15 +50,19 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     min_count = int(sys.argv[sys.argv.index("--min-count") + 1]) if "--min-count" in sys.argv else 1
+    mode = sys.argv[sys.argv.index("--mode") + 1] if "--mode" in sys.argv else "frequency"
+    fold_heh = "--fold-heh" in sys.argv
     with LEXICON_CORPUS.open(encoding="utf-8") as f:
         lex = build_lexicon(f)
     if min_count > 1:  # the lexicon bundled with the pip package keeps words seen >= 2 times
         lex = Counter({w: n for w, n in lex.items() if n >= min_count})
-    rule = Normalizer(lex, keep=frozenset())
-    full = Normalizer(lex)
+    rule = Normalizer(lex, keep=frozenset(), mode=mode, fold_heh=fold_heh)
+    full = Normalizer(lex, mode=mode, fold_heh=fold_heh)
     lines = ["# sdnorm evaluation (Sindhi)", "",
              f"Lexicon: {LEXICON_CORPUS.name} ({sum(lex.values()):,} word tokens, {len(lex):,} types). "
              "Thresholds fixed before evaluation: lex_ratio = 50, lex_max_count = 100.", ""]  # fmt: skip
+    if mode != "frequency":
+        lines.insert(3, f"Rules: sindhinorm 0.2.0 {mode} mode" + (" with fold_heh." if fold_heh else "."))
 
     # 1. native agreement
     rows = SHEET.read_text(encoding="utf-8-sig").splitlines()
@@ -120,13 +125,23 @@ def main() -> int:
               f"* Word tokens changed: {chg:,} of {tot:,} ({chg / tot:.2%}).",
               f"* Word types: {len(before):,} → {len(after):,} ({(len(after) - len(before)) / len(before):+.2%}).",
               ""]  # fmt: skip
+    # 4. clean news text (SiPOS), if present: how much does the normalizer change?
+    if SIPOS.exists():
+        rows_s = [ln.split("\t") for ln in SIPOS.read_text(encoding="utf-8").splitlines()[1:] if ln.strip()]
+        toks = [x[0] for x in rows_s if len(x) == 4]
+        changes = Counter((t, full.normalize_word(t)) for t in toks if full.normalize_word(t) != t)
+        n = sum(changes.values())
+        lines += ["## 4. Clean news text: SiPOS (no keyboard letters in the text)", "",
+                  f"* Tokens changed: {n:,} of {len(toks):,} ({n / len(toks):.2%}); distinct changes: {len(changes)}.",
+                  "* Most frequent: " + ", ".join(f"{a} → {b} ({c})" for (a, b), c in changes.most_common(8)),
+                  ""]  # fmt: skip
     text = "\n".join(lines)
     print(text)
     dest = ROOT / "results" / "sdnorm"
     dest.mkdir(parents=True, exist_ok=True)
-    (dest / ("eval_sd.md" if min_count == 1 else f"eval_sd_min{min_count}.md")).write_text(
-        text, encoding="utf-8"
-    )
+    stem = "eval_sd" + ("" if min_count == 1 else f"_min{min_count}")
+    stem += "" if mode == "frequency" else f"_{mode}" + ("_foldheh" if fold_heh else "")
+    (dest / f"{stem}.md").write_text(text, encoding="utf-8")
     return 0
 
 

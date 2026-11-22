@@ -43,3 +43,8 @@ Disagreements:
 
 * Word tokens changed: 13,135 of 266,765 (4.92%).
 * Word types: 29,797 → 28,469 (-4.46%).
+
+## 4. Clean news text: SiPOS (no keyboard letters in the text)
+
+* Tokens changed: 1,150 of 293,683 (0.39%); distinct changes: 100.
+* Most frequent: شهر → شھر (360), دهشتگردي → دھشتگردي (203), هتان → ھتان (66), ڇونه → ڇونہ (58), گهربل → گھربل (50), رهندڙ → رھندڙ (40), ڏوهن → ڏوھن (30), شهري → شھري (29)

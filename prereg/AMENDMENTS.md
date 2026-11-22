@@ -92,3 +92,17 @@ Template for each amendment:
   full-corpus LM test results).
 - Run provenance: Kaggle T4, `lm_gate5.py` identical to the repository copy; data from
   `scripts/14_export_lm_data.py` at `prereg-v7`; hashes in `docs/findings_lm.md`.
+
+## Amendment 8 — 2026-11-22 — tag prereg-v9
+- Section changed: `PREREG.md` new §12 (spelling normalization and POS tagging, H9);
+  `claim_ledger.md` new row H9 (status untested). Nothing else changed.
+- Old text: none.
+- New text: §12 fixes the data and split, test conditions, normalizers, taggers, seeds,
+  primary contrasts, decision rules, secondary analyses and prediction.
+- Reason: test the normalizer downstream, on SiPOS (obtained from its authors) and on UD Sindhi.
+- Was any test-set result seen before this change? **No tagger test result.** Seen before
+  freezing: SiPOS code-point and normalizer change counts on the whole file, and dev-only
+  smoke runs (listed in §12).
+- The systems are defined by this commit: sindhinorm 0.2.0 keyboard mode in
+  `packages/sindhinorm/src/sindhinorm/core.py`, `scripts/18_build_norm_pos.py`,
+  `scripts/19_norm_pos.py`.

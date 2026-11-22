@@ -1,4 +1,7 @@
-"""Unit tests for the sdnorm Sindhi normalizer (hand-built lexicon, no corpus)."""
+"""Unit tests for the sdnorm Sindhi normalizer (hand-built lexicon, no corpus).
+
+These pin the 0.1.0 rules (``mode="frequency"``); keyboard mode is tested in test_sindhinorm.py.
+"""
 
 from collections import Counter
 
@@ -10,7 +13,7 @@ LEX = Counter({"آهي": 30000, "آھي": 9000, "جي": 170000, "کي": 47000, "
 
 
 def norm() -> Normalizer:
-    return Normalizer(LEX.copy())
+    return Normalizer(LEX.copy(), mode="frequency")
 
 
 def test_encoding_variant_goes_to_most_frequent() -> None:

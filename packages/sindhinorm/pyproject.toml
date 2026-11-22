@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sindhinorm"
-version = "0.1.0"
+version = "0.2.0"
 description = "Corpus-guided, native-validated spelling normalizer for Sindhi (Arabic script)"
 readme = "README.md"
 requires-python = ">=3.10"

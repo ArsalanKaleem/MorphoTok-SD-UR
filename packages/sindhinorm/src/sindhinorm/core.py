@@ -54,6 +54,18 @@ LEXICAL = frozenset("ڪکكے")  # letters whose substitution can change the wor
 SAFE_OOV = {"ی": "ي", "ى": "ي", "ہ": "ه"}  # encoding folds applied to unknown words
 MAX_CANDIDATES = 4096
 
+# Keyboard mode (default since 0.2.0). Standard Sindhi uses ي, ه, ھ, ڪ and ک. The letters
+# below are what Urdu, Persian or Arabic keyboards produce instead; they are rewritten only
+# towards Sindhi letters, never written into a word.
+NON_SINDHI: dict[str, tuple[str, ...]] = {
+    "ی": ("ي",), "ى": ("ي",), "ے": ("ي",),
+    "ہ": ("ه", "ھ"),
+    "ك": ("ڪ", "ک"),
+}  # fmt: skip
+KEYBOARD_FOLD = {"ی": "ي", "ى": "ي", "ے": "ي", "ہ": "ه", "ك": "ڪ"}  # unknown words
+KEHEH, SINDHI_KAF = "ک", "ڪ"  # an Urdu keyboard has no ڪ, so ڪ is often typed as ک
+HEH_SHAPES = ("ه", "ھ")  # both used in Sindhi; merged only with fold_heh=True
+
 # Pairs (variant -> would-be canonical) that a native Sindhi reviewer judged DIFFERENT or
 # UNSURE (review of 150 Wikipedia pairs, 2026-11-09; docs/findings_human_review.md §4).
 NATIVE_KEEP: frozenset[tuple[str, str]] = frozenset({
@@ -128,7 +140,13 @@ class Normalizer:
     lex_ratio: float = 50.0
     lex_max_count: int = 100
     keep: frozenset[tuple[str, str]] = NATIVE_KEEP
+    mode: str = "keyboard"  # "keyboard" (0.2.0 default) or "frequency" (the 0.1.0 rules)
+    fold_heh: bool = False  # keyboard mode: also merge ه/ھ spellings by frequency
     _cache: dict[str, str] = field(default_factory=dict, repr=False)
+
+    def __post_init__(self) -> None:
+        if self.mode not in ("keyboard", "frequency"):
+            raise ValueError(f"mode must be 'keyboard' or 'frequency', not {self.mode!r}")
 
     def candidates(self, word: str) -> Iterator[str]:
         """All spellings reachable by swapping look-alike letters (capped)."""
@@ -163,6 +181,60 @@ class Normalizer:
         """
         if not any(c in CLASSES for c in word):
             return word, "no-variant-letters"
+        if self.mode == "keyboard":
+            return self._decide_keyboard(word)
+        return self._decide_frequency(word)
+
+    def _keyboard_candidates(self, word: str) -> Iterator[str]:
+        """Spellings reachable by replacing keyboard letters with Sindhi ones (capped)."""
+        slots: list[tuple[str, ...]] = []
+        for c in word:
+            if c in NON_SINDHI:
+                slots.append(NON_SINDHI[c])
+            elif c == KEHEH:
+                slots.append((KEHEH, SINDHI_KAF))
+            elif self.fold_heh and c in HEH_SHAPES:
+                slots.append(HEH_SHAPES)
+            else:
+                slots.append((c,))
+        if sum(len(s) > 1 for s in slots) > 8:
+            return
+        for k, combo in enumerate(itertools.product(*slots)):
+            if k >= MAX_CANDIDATES:
+                return
+            yield "".join(combo)
+
+    def _decide_keyboard(self, word: str) -> tuple[str, str]:
+        """Keyboard mode: rewrite only keyboard letters, only towards Sindhi letters."""
+        f_w = self.lexicon.get(word, 0)
+        foreign = any(c in NON_SINDHI for c in word)
+        ranked = sorted(self._keyboard_candidates(word), key=lambda x: -self.lexicon.get(x, 0))
+        for cand in ranked:
+            if cand == word:
+                continue
+            f_c = self.lexicon.get(cand, 0)
+            if f_c == 0:
+                break  # ranked by frequency: nothing attested is left
+            if (word, cand) in self.keep:
+                return word, "native-keep"  # a native speaker flagged this word: leave it alone
+            lexical = any(a == KEHEH and b == SINDHI_KAF for a, b in zip(word, cand, strict=True))
+            if lexical and not (f_w <= self.lex_max_count and f_c >= self.lex_ratio * max(f_w, 1)):
+                continue
+            if not foreign and f_c <= f_w:
+                continue  # a word in Sindhi letters changes only towards a more frequent form
+            return cand, "lexical-merge" if lexical else "encoding-merge"
+        if foreign:
+            folded = "".join(KEYBOARD_FOLD.get(c, c) for c in word)
+            if (word, folded) not in self.keep:
+                return folded, "unknown-fold"
+            return word, "native-keep"
+        better = any(self.lexicon.get(c, 0) > f_w for c in ranked if c != word)
+        if better:
+            return word, "lexical-guard"
+        return word, "unknown-kept" if f_w == 0 else "already-canonical"
+
+    def _decide_frequency(self, word: str) -> tuple[str, str]:
+        """Frequency mode: the 0.1.0 rules (most frequent look-alike spelling wins)."""
         ranked = sorted(self.candidates(word), key=lambda x: -self.lexicon.get(x, 0))
         best = next((c for c in ranked if self.allowed(word, c)), word)
         if best != word:

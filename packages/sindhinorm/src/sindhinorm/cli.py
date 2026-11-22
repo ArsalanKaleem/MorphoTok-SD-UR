@@ -20,7 +20,7 @@ from .core import Normalizer, build_lexicon
 
 
 def _load(a: argparse.Namespace) -> Normalizer:
-    kw = {"lex_ratio": a.lex_ratio, "lex_max_count": a.lex_max_count}
+    kw = {"lex_ratio": a.lex_ratio, "lex_max_count": a.lex_max_count, "mode": a.mode, "fold_heh": a.fold_heh}
     return Normalizer.load(a.lexicon, **kw) if a.lexicon else Normalizer.default(**kw)
 
 
@@ -49,6 +49,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("-l", "--lexicon", type=Path, default=None, help="custom lexicon (default: bundled)")
     ap.add_argument("--lex-ratio", type=float, default=50.0)
     ap.add_argument("--lex-max-count", type=int, default=100)
+    ap.add_argument("--mode", choices=["keyboard", "frequency"], default="keyboard",
+                    help="keyboard (default): fix only letters typed on Urdu/Persian/Arabic keyboards; "
+                    "frequency: the 0.1.0 rules")  # fmt: skip
+    ap.add_argument("--fold-heh", action="store_true", help="keyboard mode: also merge ه/ھ spellings")
     if cmd == "explain":
         ap.add_argument("text", nargs="+")
         ap.add_argument("--json", action="store_true")

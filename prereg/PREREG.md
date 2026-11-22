@@ -160,3 +160,45 @@ Recorded in `prereg/AMENDMENTS.md`.
 * **Prediction:** no transfer on all test text (as §9). If any benefit appears it should
   show first on held-out-lemma words.
 * **Caveats fixed now:** one small LM size, Wikipedia only, silver-defined held-out lemmas.
+
+## 12. Spelling normalization and POS tagging (added by Amendment 8, before any test result)
+
+* **Question (H9):** does `sindhinorm` improve part-of-speech tagging of Sindhi text that was
+  typed with keyboard look-alike letters, without harming clean text? And does the 0.2.0
+  keyboard mode avoid the clean-text changes of the 0.1.0 frequency rules?
+* **Data (primary):** SiPOS (Ali, Xu and Kumar, 2021; Sindhi news, 293,683 tokens with UPOS
+  tags), obtained from the authors and kept outside git. `scripts/18_build_norm_pos.py` ends
+  sentences at `. ؟ ! ? ۔` and splits them 80/10/10 by a salted SHA-256 of the sentence text
+  (salt `sipos-split-v1`): train 236,866, dev 28,224, test 28,592 tokens.
+* **Data (replication, secondary):** UD Sindhi-Isra official splits. Its test set was already
+  used in the exploratory POS study, so UD results are secondary.
+* **Test conditions:** clean test; keyboard-typed test, in which every token containing ي, ه
+  or ڪ gets ي → ی, ه → ہ, ڪ → ک for every occurrence (61.4% of SiPOS test tokens, 56.0% of
+  UD); and a random-letter control that alters the same tokens by one random letter.
+* **Normalizers:** `none`; `freq` (sindhinorm frequency mode, the 0.1.0 rules); `keyboard`
+  (sindhinorm keyboard mode, the 0.2.0 default). The same normalizer is applied to the
+  training, dev and test text. All use the bundled word list.
+* **Taggers:** BiLSTM `word` (whole-word embeddings) and `char` (character CNN) from
+  `morphtok.models.tagger`, full training split, seeds 0, 1, 2, at most 30 epochs with early
+  stopping on dev accuracy (patience 4). `scripts/19_norm_pos.py` defaults. The seed fixes
+  initialisation and data order, so runs are paired across normalizers.
+* **Primary H9a (SiPOS, word tagger):** Δ = accuracy on the keyboard-typed test (all tokens),
+  `keyboard` − `none`. **Helps** = mean Δ ≥ +0.05 and the 95% t-interval over the three
+  seed-paired differences excludes 0.
+* **Primary H9b (SiPOS, word tagger):** Δ = accuracy on the clean test, `keyboard` − `none`.
+  **Harm** = mean Δ < −0.002 and the 95% t-interval excludes 0; otherwise **no harm**.
+* **Secondary:** the same contrasts for the `char` tagger; `freq` − `none` and `keyboard` −
+  `freq` on the clean and keyboard-typed tests; the random-letter control (the normalizers are
+  not expected to help there); the recovery fraction (acc_kb(N) − acc_kb(none)) /
+  (acc_clean(none) − acc_kb(none)); the share of altered tokens restored to the normalized
+  clean token; and all of these on the UD replication.
+* **Prediction:** H9a holds with a large gain for the word tagger (above +0.10) and a smaller
+  one for the character tagger; H9b shows no harm; `freq` changes 0.39% of clean SiPOS tokens
+  and may be slightly worse than `keyboard` on the clean test, possibly too small to detect.
+* **Known before this section was frozen:** code-point counts and normalizer change counts on
+  the whole SiPOS file (these motivated the 0.2.0 keyboard mode), and two smoke runs on the dev
+  split only (300 training sentences, 2 epochs): on a keyboard-typed copy of dev the word
+  tagger fell from 0.575 to 0.405 and both normalizers restored about 88% of the altered dev
+  tokens. No tagger was trained on the full training split and no test accuracy was computed.
+* **Caveats fixed now:** the keyboard model is synthetic and covers only the look-alike
+  substitutions; one domain (news); SiPOS labels are used as given; one tagger architecture.

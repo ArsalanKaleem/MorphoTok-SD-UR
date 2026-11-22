@@ -11,9 +11,11 @@ from functools import lru_cache
 
 from .core import (
     CLASSES,
+    KEYBOARD_FOLD,
     LEXICAL,
     MEMBERS,
     NATIVE_KEEP,
+    NON_SINDHI,
     SAFE_OOV,
     Normalizer,
     build_lexicon,
@@ -21,9 +23,9 @@ from .core import (
     tokens,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
-    "CLASSES", "LEXICAL", "MEMBERS", "NATIVE_KEEP", "SAFE_OOV", "Normalizer", "build_lexicon",
+    "CLASSES", "KEYBOARD_FOLD", "LEXICAL", "MEMBERS", "NATIVE_KEEP", "NON_SINDHI", "SAFE_OOV", "Normalizer", "build_lexicon",
     "clean_zero_width", "default_normalizer", "explain", "normalize", "tokens",
 ]  # fmt: skip
 
