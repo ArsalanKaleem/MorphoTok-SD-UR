@@ -49,7 +49,12 @@ def main() -> int:
     pkg = ROOT / "packages" / "sindhinorm" / "src" / "sindhinorm"
     for f in sorted(pkg.rglob("*")):
         if f.is_file() and "__pycache__" not in f.parts:
-            files[f"normpos/code/packages/sindhinorm/src/sindhinorm/{f.relative_to(pkg).as_posix()}"] = f
+            rel = f.relative_to(pkg).as_posix()
+            # Kaggle unpacks .gz files in uploaded datasets; a neutral suffix keeps the word list
+            # intact, and the notebook restores the original name in its working copy of the code.
+            if rel.endswith(".gz"):
+                rel += ".keep"
+            files[f"normpos/code/packages/sindhinorm/src/sindhinorm/{rel}"] = f
     for ds in ("sipos", "ud_sd"):
         for name in TASK_FILES:
             files[f"normpos/tasks/{ds}/{name}.jsonl"] = ROOT / "data" / "tasks" / ds / f"{name}.jsonl"
@@ -85,16 +90,42 @@ import torch
 print("torch", torch.__version__, "| CUDA:", torch.cuda.is_available())
 print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "NO GPU: Settings -> Accelerator -> GPU T4 x1")
 """),
-        md("## 2. Find the uploaded package (identified by `normpos_meta.json`)"),
+        md("""
+## 2. Find the uploaded package and prepare a working copy of the code
+
+Kaggle unpacks `.gz` files in uploaded datasets, so the normalizer's word list is shipped as
+`sd_lexicon.json.gz.keep`. This cell copies the code to `/kaggle/working/code` and restores the
+word list as `sd_lexicon.json.gz` (re-compressing it if Kaggle unpacked it anyway).
+"""),
         code("""
-import glob, json, os, shutil
+import glob, gzip, hashlib, json, os, shutil
 metas = glob.glob("/kaggle/input/**/normpos_meta.json", recursive=True)
 assert metas, "dataset not found: add the sd-normpos dataset via 'Add Input'"
 PKG = os.path.dirname(metas[0])
-print("package:", PKG)
-shutil.copy(os.path.join(PKG, "code/scripts/19_norm_pos.py"), "/kaggle/working/19_norm_pos.py")
-RUN = f"python {PKG}/code/scripts/19_norm_pos.py --data-root {PKG}/tasks"
-print(json.load(open(metas[0]))["script_sha256"])
+CODE = "/kaggle/working/code"
+shutil.rmtree(CODE, ignore_errors=True)
+shutil.copytree(os.path.join(PKG, "code"), CODE)
+data = os.path.join(CODE, "packages/sindhinorm/src/sindhinorm/data")
+target = os.path.join(data, "sd_lexicon.json.gz")
+for name in os.listdir(data):
+    path = os.path.join(data, name)
+    if name == "sd_lexicon.json.gz.keep":
+        os.replace(path, target)
+    elif name.startswith("sd_lexicon") and not name.endswith((".gz", ".keep")):
+        if os.path.isdir(path):  # unpacked into a folder: take the single file inside
+            inner = [os.path.join(path, f) for f in os.listdir(path)]
+            path = inner[0]
+        if not os.path.exists(target):
+            raw = open(path, "rb").read()
+            json.loads(raw)  # must be the JSON word list
+            with gzip.open(target, "wb") as f:
+                f.write(raw)
+n = len(json.loads(gzip.decompress(open(target, "rb").read())))
+print("package:", PKG, "| word list entries:", n)
+shutil.copy(os.path.join(CODE, "scripts/19_norm_pos.py"), "/kaggle/working/19_norm_pos.py")
+print("script sha256:", hashlib.sha256(open("/kaggle/working/19_norm_pos.py", "rb").read()).hexdigest())
+print("expected     :", json.load(open(metas[0]))["script_sha256"])
+RUN = f"python {CODE}/scripts/19_norm_pos.py --data-root {PKG}/tasks"
 """),
         md("""
 ## 3. Smoke test (about 1 minute; dev split only, writes nothing)
