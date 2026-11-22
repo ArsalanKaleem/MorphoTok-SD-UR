@@ -68,13 +68,77 @@
     return res;
   }
 
+  // Keyboard mode (default since 0.2.0): letters that Urdu, Persian or Arabic keyboards produce
+  // instead of Sindhi ones are rewritten only towards Sindhi letters, never written into a word.
+  const NON_SINDHI = {
+    "ی": ["ي"], "ى": ["ي"], "ے": ["ي"],
+    "ہ": ["ه", "ھ"],
+    "ك": ["ڪ", "ک"],
+  };
+  const KEYBOARD_FOLD = { "ی": "ي", "ى": "ي", "ے": "ي", "ہ": "ه", "ك": "ڪ" };
+  const KEHEH = "ک", SINDHI_KAF = "ڪ";
+  const HEH_SHAPES = ["ه", "ھ"];
+
   class Normalizer {
     constructor(lexicon, opts = {}) {
       this.lexicon = lexicon instanceof Map ? lexicon : new Map(Object.entries(lexicon));
       this.lexRatio = opts.lexRatio ?? 50;
       this.lexMaxCount = opts.lexMaxCount ?? 100;
       this.keep = opts.keep ?? NATIVE_KEEP;
+      this.mode = opts.mode ?? "keyboard";
+      this.foldHeh = opts.foldHeh ?? false;
+      if (this.mode !== "keyboard" && this.mode !== "frequency") throw new Error("mode must be keyboard or frequency");
       this.cache = new Map();
+    }
+    keyboardCandidates(word) {
+      const slots = Array.from(word).map((c) => {
+        if (c in NON_SINDHI) return NON_SINDHI[c];
+        if (c === KEHEH) return [KEHEH, SINDHI_KAF];
+        if (this.foldHeh && HEH_SHAPES.includes(c)) return HEH_SHAPES;
+        return [c];
+      });
+      if (slots.filter((s) => s.length > 1).length > 8) return [];
+      const out = [];
+      const idx = new Array(slots.length).fill(0);
+      while (out.length < MAX_CANDIDATES) {
+        out.push(idx.map((k, p) => slots[p][k]).join(""));
+        let p = slots.length - 1;
+        while (p >= 0) {
+          idx[p]++;
+          if (idx[p] < slots[p].length) break;
+          idx[p] = 0;
+          p--;
+        }
+        if (p < 0) break;
+      }
+      return out;
+    }
+    decideKeyboard(word) {
+      const fw = this.count(word);
+      const chars = Array.from(word);
+      const foreign = chars.some((c) => c in NON_SINDHI);
+      const ranked = this.keyboardCandidates(word)
+        .map((c, k) => [c, this.count(c), k])
+        .sort((x, y) => y[1] - x[1] || x[2] - y[2])
+        .map((x) => x[0]);
+      for (const cand of ranked) {
+        if (cand === word) continue;
+        const fc = this.count(cand);
+        if (fc === 0) break;
+        if (this.keep.has(keyOf(word, cand))) return [word, "native-keep"];
+        const cc = Array.from(cand);
+        const lexical = chars.some((a, k) => a === KEHEH && cc[k] === SINDHI_KAF);
+        if (lexical && !(fw <= this.lexMaxCount && fc >= this.lexRatio * Math.max(fw, 1))) continue;
+        if (!foreign && fc <= fw) continue;
+        return [cand, lexical ? "lexical-merge" : "encoding-merge"];
+      }
+      if (foreign) {
+        const folded = chars.map((c) => KEYBOARD_FOLD[c] ?? c).join("");
+        if (!this.keep.has(keyOf(word, folded))) return [folded, "unknown-fold"];
+        return [word, "native-keep"];
+      }
+      if (ranked.some((c) => c !== word && this.count(c) > fw)) return [word, "lexical-guard"];
+      return [word, fw === 0 ? "unknown-kept" : "already-canonical"];
     }
     count(w) { return this.lexicon.get(w) || 0; }
     candidates(word) {
@@ -112,6 +176,7 @@
     }
     decide(word) {
       if (!Array.from(word).some((c) => c in CLASSES)) return [word, "no-variant-letters"];
+      if (this.mode === "keyboard") return this.decideKeyboard(word);
       const ranked = this.candidates(word)
         .map((c, k) => [c, this.count(c), k])
         .sort((x, y) => y[1] - x[1] || x[2] - y[2])
@@ -148,7 +213,7 @@
   }
 
   const api = { ZWNJ, ZWJ, CLASSES, MEMBERS, LEXICAL, SAFE_OOV, NATIVE_KEEP, NATIVE_KEEP_LIST, keyOf,
-    isWordChar, cleanZeroWidth, tokens, Normalizer };
+    NON_SINDHI, KEYBOARD_FOLD, isWordChar, cleanZeroWidth, tokens, Normalizer };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.sindhinorm = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -202,3 +202,6 @@ Recorded in `prereg/AMENDMENTS.md`.
   tokens. No tagger was trained on the full training split and no test accuracy was computed.
 * **Caveats fixed now:** the keyboard model is synthetic and covers only the look-alike
   substitutions; one domain (news); SiPOS labels are used as given; one tagger architecture.
+* **Compute (added by Amendment 9):** the runs execute on one Kaggle T4 GPU with
+  `scripts/19_norm_pos.py --device auto --out <dir>` (built by `scripts/make_normpos_kaggle.py`).
+  The design, data, seeds, metrics and decision rules above are unchanged.

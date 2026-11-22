@@ -60,14 +60,16 @@ def make_normalizer(name: str):  # type: ignore[no-untyped-def]
 
 def run_one(job: dict[str, Any]) -> dict[str, Any]:
     """Train and evaluate one tagger; returns the summary row."""
+    import dataclasses
+
     import torch
 
-    from morphtok.experiments.results import finalise, new_record
     from morphtok.models.tagger import Tagger, Vocab, make_batch, n_parameters
 
     torch.set_num_threads(job["threads"])
+    device = job["device"] if job["device"] != "auto" else ("cuda" if torch.cuda.is_available() else "cpu")
     ds, normalizer, system, seed = job["dataset"], job["normalizer"], job["system"], job["seed"]
-    task = ROOT / "data" / "tasks" / ds
+    task = Path(job["data_root"]) / ds
     apply = make_normalizer(normalizer)
 
     def prep(sents: list[dict]) -> list[dict]:
@@ -93,14 +95,20 @@ def run_one(job: dict[str, Any]) -> dict[str, Any]:
     chars = Vocab([c for s in train for t in s["tokens"] for c in t])
     pieces = Vocab([])
     tags = Vocab([u for s in train for u in s["upos"]])
-    model = Tagger(system, len(tags), len(words), len(chars), len(pieces))
+    model = Tagger(system, len(tags), len(words), len(chars), len(pieces)).to(device)
+
+    def to_dev(b):  # type: ignore[no-untyped-def]
+        # lengths stay on the CPU, as pack_padded_sequence requires
+        return dataclasses.replace(b, words=b.words.to(device), chars=b.chars.to(device),
+                                   pieces=b.pieces.to(device), tags=b.tags.to(device))  # fmt: skip
+
     opt = torch.optim.Adam(model.parameters(), lr=2e-3)
     loss_fn = torch.nn.CrossEntropyLoss(ignore_index=-100)
 
     def batches(sents: list[dict]) -> list:
         order = list(range(len(sents)))
         random.shuffle(order)
-        return [make_batch([sents[i] for i in order[k : k + 32]], words, chars, pieces, tags, None)
+        return [to_dev(make_batch([sents[i] for i in order[k : k + 32]], words, chars, pieces, tags, None))
                 for k in range(0, len(order), 32)]  # fmt: skip
 
     def predict(sents: list[dict]) -> list[list[int]]:
@@ -109,7 +117,7 @@ def run_one(job: dict[str, Any]) -> dict[str, Any]:
         with torch.no_grad():
             for k in range(0, len(sents), 64):
                 chunk = sents[k : k + 64]
-                pred = model(make_batch(chunk, words, chars, pieces, tags, None)).argmax(-1)
+                pred = model(to_dev(make_batch(chunk, words, chars, pieces, tags, None))).argmax(-1).cpu()
                 out += [pred[i, : len(s["tokens"])].tolist() for i, s in enumerate(chunk)]
         return out
 
@@ -162,6 +170,7 @@ def run_one(job: dict[str, Any]) -> dict[str, Any]:
         "acc_kbnoise_pert": acc_on(b["test_kbnoise"], pert),
         "restored_pert": acc_on(restored, pert), "n_tokens": len(b["test"]), "n_pert": pert.count("1"),
         "dev_acc": best, "epochs": epochs, "params": n_parameters(model), "seconds": round(time.time() - t0, 1),
+        "device": device,
     }  # fmt: skip
     row = {
         "dataset": ds,
@@ -171,13 +180,24 @@ def run_one(job: dict[str, Any]) -> dict[str, Any]:
         "smoke": job["smoke"],
         **m,
     }
-    if not job["smoke"]:
+    per_token = {**b, "perturbed_mask": pert, "restored": restored}
+    if not job["smoke"] and job["out"]:  # plain files (Kaggle): no git checkout for run records
+        out = Path(job["out"])
+        out.mkdir(parents=True, exist_ok=True)
+        key = {"dataset": ds, "normalizer": normalizer, "system": system, "seed": seed}
+        with (out / f"per_token_{ds}.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps({**key, **per_token}) + "\n")
+        with (out / f"runs_{ds}.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps(row) + "\n")
+    elif not job["smoke"]:
+        from morphtok.experiments.results import finalise, new_record
+
         eid = f"SD-NORMPOS-{ds}-{normalizer}-{system}"
         rec = new_record(eid, seed, {"job": {k: v for k, v in job.items() if k != "threads"}},
                          {"name": ds, "language": "sd", "synthetic": False, "source": str(task)},
                          False, None, {}, {"name": f"{system}+{normalizer}"})  # fmt: skip
         rec["metrics"] = m
-        rec["per_token"] = {**b, "perturbed_mask": pert, "restored": restored}
+        rec["per_token"] = per_token
         finalise(rec, ROOT / "runs")
         out = ROOT / "results" / "norm_pos"
         out.mkdir(parents=True, exist_ok=True)
@@ -198,12 +218,24 @@ def main() -> int:
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--threads", type=int, default=3)
     ap.add_argument("--smoke", action="store_true", help="300 training sentences, 2 epochs, dev only")
+    ap.add_argument("--device", default="auto", help="auto (GPU if available), cpu or cuda")
+    ap.add_argument("--data-root", dest="data_root", default=str(ROOT / "data" / "tasks"))
+    ap.add_argument("--out", default="", help="write plain result files here instead of run records (Kaggle)")
     a = ap.parse_args()
     if a.smoke:
         a.epochs, a.seeds, a.datasets = 2, 1, a.datasets[:1]
     jobs = [{"dataset": d, "normalizer": n, "system": s, "seed": k, "epochs": a.epochs,
-             "patience": a.patience, "threads": a.threads, "smoke": a.smoke}
+             "patience": a.patience, "threads": a.threads, "smoke": a.smoke, "device": a.device,
+             "data_root": a.data_root, "out": a.out}
             for d in a.datasets for n in a.normalizers for s in a.systems for k in range(a.seeds)]  # fmt: skip
+    if a.out:  # resume: skip runs already written
+        done = set()
+        for f in Path(a.out).glob("runs_*.jsonl"):
+            for ln in f.read_text(encoding="utf-8").splitlines():
+                if ln.strip():
+                    r = json.loads(ln)
+                    done.add((r["dataset"], r["normalizer"], r["system"], r["seed"]))
+        jobs = [j for j in jobs if (j["dataset"], j["normalizer"], j["system"], j["seed"]) not in done]
     print(f"{len(jobs)} runs; {a.jobs} parallel x {a.threads} threads", flush=True)
     with mp.get_context("spawn").Pool(a.jobs) as pool:
         for row in pool.imap_unordered(run_one, jobs):

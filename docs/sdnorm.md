@@ -79,3 +79,40 @@ Lexicon: Sindhi Wikipedia, 3.53M word tokens.
   94% of perturbed tokens predicts that a word-level model regains most of its confusable
   drop, which remains to be run.
 * One reviewer; Sindhi only (no Urdu mode).
+
+## Version 0.2.0: keyboard mode (2026-11-22)
+
+**What prompted it.** On SiPOS (Ali et al., 2021), 293,683 tokens of clean Sindhi news with no
+Farsi yeh, heh goal or Arabic kaf at all, the 0.1.0 rules changed 1,150 tokens (0.39%). Many of
+those changes were wrong. The rules follow Wikipedia's majority spelling, so they wrote non-Sindhi
+letters into correct words (عبدالقدير → عبدالقدیر, ڇونه → ڇونہ), swapped between the two heh
+shapes Sindhi uses (شهر → شھر, 360 times), and once merged two real words (لڪيل "hidden" →
+لکيل "written"). `scripts/sipos_inspect.py` lists them.
+
+**Rules.** Keyboard mode (now the default) rewrites only the letters that Urdu, Persian or Arabic
+keyboards produce instead of Sindhi ones (ی ى ے → ي, ہ → ه or ھ, ك → ڪ or ک) and never writes
+them into a word. Where there is a choice of Sindhi letter, the more frequent spelling wins. The
+guarded ک → ڪ merge keeps its thresholds (typed form ≤ 100 times, other form ≥ 50× more
+frequent). A word in Sindhi letters is otherwise left alone; `fold_heh=True` restores the ه/ھ
+merge. `mode="frequency"` reproduces 0.1.0 exactly. The native keep-list applies in both modes.
+
+**Evaluation** (`python scripts/12_sdnorm_eval.py --min-count 2 --mode keyboard [--fold-heh]`,
+bundled word list; `results/sdnorm/eval_sd_min2_keyboard*.md`):
+
+| Test | 0.1.0 rules | 0.2.0 keyboard | 0.2.0 + fold_heh |
+|---|---|---|---|
+| UD test, ي typed as ی: restored to the normalized clean token | 94.0% | **94.9%** | 94.8% |
+| … restored to the exact original token | 92.3% | **94.9%** | 93.2% |
+| Random-letter control "restored" | 0.4% | 0.3% | 0.4% |
+| Clean UD test tokens changed | 1.35% | **0.03%** | 1.35% |
+| Clean SiPOS tokens changed | 0.39% | **0.002%** (7 tokens) | 0.36% |
+| Sindhi Wikipedia pilot tokens changed | 4.92% | 0.55% | 4.98% |
+| 150 native pairs, frequency rule alone: precision / recall | 0.874 / 0.992 | 0.831 / 0.508 | 0.875 / 1.000 |
+
+Recall on the native pairs is lower in plain keyboard mode by design: most of the pairs the
+reviewer judged SAME differ only in heh shape, which keyboard mode leaves alone. Of the 7 SiPOS
+tokens keyboard mode still changes, 4 are چکي → چڪي, a ک → ڪ merge where both spellings may be real
+words; it is a candidate for native review. The SiPOS observations motivated the design, so the
+SiPOS rows are not an independent test of it; the UD rows and the preregistered tagging study
+(PREREG §12) are. The browser port matches Python in all three configurations (0 mismatches on
+139,762 words and 3,000 texts each).

@@ -72,7 +72,7 @@ class CharCNN(nn.Module):
         for conv in self.convs:
             h = torch.relu(conv(x))[:, :, :c]
             feats.append(h.masked_fill(~mask, -1e4).max(dim=2).values)
-        out = torch.zeros(b * t, self.proj.out_features, dtype=x.dtype)
+        out = torch.zeros(b * t, self.proj.out_features, dtype=x.dtype, device=x.device)
         out[real] = self.proj(torch.cat(feats, dim=1))
         return out.view(b, t, -1)
 

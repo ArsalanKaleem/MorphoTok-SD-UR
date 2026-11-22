@@ -106,3 +106,22 @@ Template for each amendment:
 - The systems are defined by this commit: sindhinorm 0.2.0 keyboard mode in
   `packages/sindhinorm/src/sindhinorm/core.py`, `scripts/18_build_norm_pos.py`,
   `scripts/19_norm_pos.py`.
+
+## Amendment 9 — 2026-11-22 — tag prereg-v10
+- Section changed: `PREREG.md` §12, one added line on compute. Nothing else changed.
+- Old text: none (the compute platform was not specified; the grid was started on a 12-core CPU).
+- New text: the §12 runs execute on a Kaggle T4 GPU.
+- Reason: the CPU grid (started 2026-11-22 15:44, 6 parallel runs) completed **none of its 36
+  runs** in about two hours of active computing, plus a sleep of the computer from 17:01 to
+  18:18. It was cancelled. No run finished, so no result file, run record or test accuracy
+  exists (`results/norm_pos/` absent; no `SD-NORMPOS` entry in `runs/ledger.jsonl`).
+- Implementation changes, none affecting the design: `scripts/19_norm_pos.py` gains `--device`
+  (GPU when available; batches moved to the device), `--data-root`, and `--out` (plain result
+  files plus per-token correctness, used where no git checkout exists) with resume;
+  `morphtok.models.tagger.CharCNN` now allocates its output on the input's device (no change
+  on CPU). A dev-only smoke run after the change reproduced the earlier dev numbers exactly
+  (word tagger, keyboard mode: 0.5749 clean, 0.5301 keyboard-typed).
+- Was any test-set result seen before this change? **No.**
+- Provenance plan: the Kaggle package records the SHA-256 of `19_norm_pos.py`; the downloaded
+  copy of the script must equal the repository version at this tag.
+

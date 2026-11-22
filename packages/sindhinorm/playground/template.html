@@ -168,15 +168,22 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
         <input id="maxc" type="range" min="0" max="1000" step="10" value="100">
       </label>
       <label for="keepOn" style="display:flex;gap:8px;align-items:center"><input id="keepOn" type="checkbox" checked> Use the native speaker's keep-list (24 pairs)</label>
+      <label for="modeSel">Rules
+        <select id="modeSel">
+          <option value="keyboard" selected>0.2.0: fix keyboard letters only (default)</option>
+          <option value="frequency">0.1.0: most frequent spelling wins</option>
+        </select>
+      </label>
+      <label for="foldHeh" style="display:flex;gap:8px;align-items:center"><input id="foldHeh" type="checkbox"> Also merge the two heh shapes (<bdi lang="sd">ه</bdi> / <bdi lang="sd">ھ</bdi>) by frequency</label>
     </div>
     <ol class="rules">
       <li>Unicode NFC. Zero-width joiners and non-joiners are removed unless a non-joiner sits between two letters.</li>
-      <li>Candidates: every combination of look-alike letters at the word's yeh {ي ی ى ے}, heh {ه ھ ہ} and kaf {ڪ ک ك} positions. The most frequent allowed candidate wins.</li>
-      <li>Encoding-only differences (ي/ی/ى, ه/ھ/ہ) merge whenever the candidate is more frequent.</li>
-      <li>Differences involving ک, ڪ, ك or ے can change the word, so they merge only when the rare form is seen at most 100 times and the candidate at least 50× more often.</li>
-      <li>Words not in the lexicon only get the safest folds: <bdi lang="sd">ی</bdi> <bdi lang="sd">ى</bdi> → <bdi lang="sd">ي</bdi> and <bdi lang="sd">ہ</bdi> → <bdi lang="sd">ه</bdi>.</li>
+      <li>Only letters that Urdu, Persian or Arabic keyboards produce instead of Sindhi ones are rewritten: <bdi lang="sd">ی</bdi> <bdi lang="sd">ى</bdi> <bdi lang="sd">ے</bdi> → <bdi lang="sd">ي</bdi>, <bdi lang="sd">ہ</bdi> → <bdi lang="sd">ه</bdi> or <bdi lang="sd">ھ</bdi>, <bdi lang="sd">ك</bdi> → <bdi lang="sd">ڪ</bdi> or <bdi lang="sd">ک</bdi>. These letters are never written into a word.</li>
+      <li>Where there is a choice, the spelling more frequent in Sindhi Wikipedia wins.</li>
+      <li>An Urdu keyboard has no <bdi lang="sd">ڪ</bdi>, so <bdi lang="sd">ک</bdi> becomes <bdi lang="sd">ڪ</bdi> only when the typed form is seen at most 100 times and the other at least 50× more often (<bdi lang="sd">کي</bdi> and <bdi lang="sd">ڪي</bdi> are different words).</li>
+      <li>A word written entirely in Sindhi letters is otherwise left as it is. Pairs a native speaker judged different are never merged.</li>
     </ol>
-    <p class="note">Defaults were fixed before evaluation: on Urdu-keyboard text (ي typed as ی) 94.0% of altered words are restored, and 1.35% of clean words change.</p>
+    <p class="note">Measured with the default rules: 94.9% of words altered by Urdu-keyboard typing (<bdi lang="sd">ي</bdi> typed as <bdi lang="sd">ی</bdi>) are restored; 0.03% of clean UD words and 0.002% of clean SiPOS news words change. The 0.1.0 rules restored 94.0% but changed 1.35% and 0.39%.</p>
   </details>
 
   <footer>
@@ -202,12 +209,12 @@ const LEXICON_GZ_B64 = "__LEXICON_B64__";
     "‌": ["ZERO WIDTH NON-JOINER", ""], "‍": ["ZERO WIDTH JOINER", ""],
   };
   const WHY = {
-    "encoding-merge": "Same letter, different encoding. The corpus spelling is more frequent, so it wins.",
-    "lexical-merge": "A different Sindhi letter, but the typed form is rare and the corpus form is far more frequent, so it is treated as a typing slip.",
+    "encoding-merge": "A letter typed on an Urdu, Persian or Arabic keyboard was replaced with the Sindhi letter. (Under the 0.1.0 rules: a more frequent spelling of the same look-alike letters.)",
+    "lexical-merge": "A different Sindhi letter (usually <bdi>ک</bdi> for <bdi>ڪ</bdi>, since Urdu keyboards have no <bdi>ڪ</bdi>), but the typed form is rare and the other far more frequent, so it is treated as a typing slip.",
     "native-keep": "A native speaker judged these to be different words (or was unsure), so they are never merged.",
     "lexical-guard": "A more frequent spelling exists, but it uses a different Sindhi letter and the typed form is common enough to be a real word. Left alone.",
-    "already-canonical": "Already the most frequent spelling.",
-    "unknown-fold": "Not in the lexicon; only the safest folds were applied (<bdi>ی</bdi> <bdi>ى</bdi> → <bdi>ي</bdi>, <bdi>ہ</bdi> → <bdi>ه</bdi>).",
+    "already-canonical": "Written in Sindhi letters with no better-attested spelling. Left alone.",
+    "unknown-fold": "Not in the word list; keyboard letters were replaced with their usual Sindhi letters (<bdi>ی</bdi> <bdi>ى</bdi> <bdi>ے</bdi> → <bdi>ي</bdi>, <bdi>ہ</bdi> → <bdi>ه</bdi>, <bdi>ك</bdi> → <bdi>ڪ</bdi>).",
     "unknown-kept": "Not in the lexicon and nothing safe to fold. Left alone.",
     "no-variant-letters": "Contains no look-alike letters.",
   };
@@ -221,7 +228,8 @@ const LEXICON_GZ_B64 = "__LEXICON_B64__";
 
   function makeNormalizer() {
     const keep = $("keepOn").checked ? S.NATIVE_KEEP : new Set();
-    norm = new S.Normalizer(lexicon, { lexRatio: +$("ratio").value, lexMaxCount: +$("maxc").value, keep });
+    norm = new S.Normalizer(lexicon, { lexRatio: +$("ratio").value, lexMaxCount: +$("maxc").value, keep,
+      mode: $("modeSel").value, foldHeh: $("foldHeh").checked });
   }
 
   function hexOf(c) { return "U+" + c.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"); }
@@ -291,7 +299,7 @@ const LEXICON_GZ_B64 = "__LEXICON_B64__";
   }
 
   // Simulate typing on an Urdu keyboard: the layout has no ي, ه or ڪ keys.
-  const URDU = { "ي": ["ی"], "ه": ["ہ", "ھ"], "ڪ": ["ک"] };
+  const URDU = { "ي": ["ی"], "ه": ["ہ"], "ڪ": ["ک"] };
   function scramble() {
     if (!lexicon) return;
     const src = $("input").value;
@@ -331,7 +339,7 @@ const LEXICON_GZ_B64 = "__LEXICON_B64__";
     catch { const r = document.createRange(); r.selectNodeContents($("output")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected: press Ctrl+C"; }
     setTimeout(() => { btn.textContent = "Copy result"; }, 1600);
   });
-  for (const id of ["ratio", "maxc", "keepOn"]) {
+  for (const id of ["ratio", "maxc", "keepOn", "modeSel", "foldHeh"]) {
     $(id).addEventListener("input", () => { $("ratioOut").textContent = $("ratio").value; $("maxcOut").textContent = $("maxc").value; makeNormalizer(); render(); });
   }
   const pick = (e) => { const t = e.target.closest("[data-i]"); if (t) inspect(+t.dataset.i); };

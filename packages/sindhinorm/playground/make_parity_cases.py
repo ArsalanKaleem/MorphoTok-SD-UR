@@ -36,10 +36,19 @@ for _ in range(3000):
         parts.append(rng.choice(all_words))
         parts.append(rng.choice(pieces))
     texts.append("".join(parts))
-cases = {
-    "words": [[w, *norm.decide(w)] for w in all_words],
-    "texts": [[t, norm.normalize(t), norm.explain(t)] for t in texts],
+MODES = {  # name -> Normalizer options (the JS port uses the camelCase spelling)
+    "keyboard": {"mode": "keyboard"},
+    "frequency": {"mode": "frequency"},
+    "keyboard_foldheh": {"mode": "keyboard", "fold_heh": True},
 }
+cases: dict = {"modes": {}}
+for name, opts in MODES.items():
+    n = sindhinorm.Normalizer(norm.lexicon, **opts)
+    cases["modes"][name] = {
+        "options": opts,
+        "words": [[w, *n.decide(w)] for w in all_words],
+        "texts": [[t, n.normalize(t), n.explain(t)] for t in texts],
+    }
 with open(sys.argv[1], "w", encoding="utf-8") as f:
     json.dump(cases, f, ensure_ascii=False)
-print(len(cases["words"]), "words,", len(texts), "texts")
+print(len(all_words), "words,", len(texts), "texts, modes:", ", ".join(MODES))
