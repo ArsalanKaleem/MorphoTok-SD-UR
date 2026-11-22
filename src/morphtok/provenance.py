@@ -75,7 +75,13 @@ def prereg_status() -> dict[str, Any]:
     tags_out = _git("tag", "--list", f"{PREREG_TAG_PREFIX}*")
     if tags_out is None:
         return {"frozen": False, "tag": None, "reason": "git unavailable"}
-    tags = sorted(t for t in tags_out.splitlines() if t)
+
+    def version(t: str) -> int:
+        suffix = t[len(PREREG_TAG_PREFIX) :]
+        return int(suffix) if suffix.isdigit() else -1
+
+    # numeric order: a text sort puts prereg-v10 before prereg-v9
+    tags = sorted((t for t in tags_out.splitlines() if t), key=version)
     if not tags:
         return {"frozen": False, "tag": None, "reason": "no prereg tag"}
     tag = tags[-1]
